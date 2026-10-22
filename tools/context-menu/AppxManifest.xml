@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sparse package ("packaged with external location"): registers the COM class behind "Boyut ile analiz et" in
+  Windows 11's new (top-level) context menu. Registered by tools/register-modern-context-menu.ps1. The Clsid must
+  match ContextMenuServer.Clsid. COM starts "Boyut.exe -Embedding" inside the package; the app itself deliberately
+  has no <msix> element in app.manifest: a UI process carrying the identity outside the package container is
+  terminated by AppModel as soon as COM activates the package.
+-->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+    xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+    xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+    xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    IgnorableNamespaces="uap uap10 desktop4 desktop5 com rescap">
+
+  <Identity Name="Boyut" Publisher="CN=Boyut" Version="0.1.0.0" ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Boyut</DisplayName>
+    <PublisherDisplayName>Boyut</PublisherDisplayName>
+    <Logo>Assets\Boyut.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
+  </Properties>
+
+  <Resources>
+    <Resource Language="tr-tr" />
+  </Resources>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="Boyut" Executable="Boyut.exe" uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App">
+      <uap:VisualElements
+          AppListEntry="none"
+          DisplayName="Boyut"
+          Description="Klasör ve disk analizi"
+          BackgroundColor="transparent"
+          Square150x150Logo="Assets\Boyut.png"
+          Square44x44Logo="Assets\Boyut.png" />
+      <Extensions>
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <desktop5:ItemType Type="Directory">
+              <desktop5:Verb Id="BoyutAnaliz" Clsid="1B0D848D-B31B-40E6-AE87-45523F2C897F" />
+            </desktop5:ItemType>
+            <desktop5:ItemType Type="Directory\Background">
+              <desktop5:Verb Id="BoyutAnaliz" Clsid="1B0D848D-B31B-40E6-AE87-45523F2C897F" />
+            </desktop5:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="Boyut.exe" DisplayName="Boyut bağlam menüsü">
+              <com:Class Id="1B0D848D-B31B-40E6-AE87-45523F2C897F" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Boyut.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:Boyut.App.Services"
+    Title="Boyut">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnFocusSearch" />
+            <KeyboardAccelerator Key="F5" Invoked="OnRescan" />
+            <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnOpenFolder" />
+        </Grid.KeyboardAccelerators>
+
+        <TitleBar
+            x:Name="AppTitleBar"
+            Title="Boyut"
+            Subtitle="{x:Bind Session.RootLabel, Mode=OneWay}"
+            IsBackButtonVisible="False"
+            IsPaneToggleButtonVisible="False">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/Boyut.png" />
+            </TitleBar.IconSource>
+            <AutoSuggestBox
+                x:Name="GlobalSearch"
+                MinWidth="320"
+                MaxWidth="520"
+                VerticalAlignment="Center"
+                IsEnabled="{x:Bind Session.HasIndex, Mode=OneWay}"
+                PlaceholderText="Bu taramada ara (Ctrl+F) — ör. *.mp4 size:&gt;1gb"
+                QueryIcon="Find"
+                QuerySubmitted="OnGlobalSearchSubmitted" />
+        </TitleBar>
+
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="True"
+            IsTitleBarAutoPaddingEnabled="False"
+            OpenPaneLength="232"
+            PaneDisplayMode="Left"
+            SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Ana sayfa" Tag="home">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE80F;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Klasör ağacı" Tag="tree">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8B7;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Değişimler" Tag="changes">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE81C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Gelişmiş arama" Tag="search">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE721;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Temizlik ve türler" Tag="cleanup">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEA99;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <InfoBar
+                    Margin="24,12,24,0"
+                    IsOpen="{x:Bind services:Ui.HasText(Session.Notice), Mode=OneWay}"
+                    Closed="OnNoticeClosed"
+                    Message="{x:Bind Session.Notice, Mode=OneWay}"
+                    Severity="{x:Bind NoticeSeverity(Session.NoticeIsError), Mode=OneWay}" />
+
+                <Border
+                    Grid.Row="1"
+                    Margin="24,12,24,0"
+                    Style="{StaticResource Card}"
+                    Visibility="{x:Bind Session.IsScanning, Mode=OneWay}">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="6">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}">
+                                <Run Text="Taranıyor: " /><Run Text="{x:Bind Session.ScanTarget, Mode=OneWay}" />
+                            </TextBlock>
+                            <ProgressBar
+                                IsIndeterminate="{x:Bind Session.ProgressIndeterminate, Mode=OneWay}"
+                                Maximum="100"
+                                Value="{x:Bind Session.ProgressValue, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind Session.ProgressText, Mode=OneWay}" />
+                            <TextBlock
+                                MaxLines="1"
+                                Style="{StaticResource CardLabel}"
+                                Text="{x:Bind Session.ProgressDetail, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Click="OnCancelScan"
+                            Content="İptal" />
+                    </Grid>
+                </Border>
+
+                <Frame x:Name="ContentFrame" Grid.Row="2" />
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Boyut.App.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
+            <x:Double x:Key="PageMaxWidth">1600</x:Double>
+            <Thickness x:Key="PagePadding">24,16,24,24</Thickness>
+
+            <!-- Windows 11 card -->
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <Style x:Key="CardLabel" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="CardValue" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+
+            <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
+
+            <Style x:Key="ColumnHeader" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="Secondary" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <!-- Thin usage bar, e.g. "share of parent" in the tree -->
+            <Style x:Key="ShareBar" TargetType="ProgressBar">
+                <Setter Property="Minimum" Value="0" />
+                <Setter Property="Maximum" Value="100" />
+                <Setter Property="MinHeight" Value="6" />
+                <Setter Property="Height" Value="6" />
+                <Setter Property="CornerRadius" Value="3" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

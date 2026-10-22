@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boyut — Windows için disk ve klasör analizi</title>
+<meta name="description" content="Diskinizi neyin doldurduğunu saniyeler içinde gösteren Windows 11 uygulaması. NTFS'te MFT'yi doğrudan okur, treemap ile gösterir, güvenle temizler.">
+<meta property="og:title" content="Boyut — Windows için disk ve klasör analizi">
+<meta property="og:description" content="1,3 milyon dosyayı 1,5 saniyede indeksler. Treemap, gelişmiş arama, temizlik önerileri, taramalar arası fark.">
+<meta property="og:image" content="https://mihrimatrix.github.io/boyut/ekran-agac.png">
+<meta name="theme-color" content="#0B5CBA">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F4F6F9;
+  --surface: #FFFFFF;
+  --sunken: #EAEEF3;
+  --ink: #14202B;
+  --muted: #586A7C;
+  --line: #D8E0E8;
+  --brand: #0B5CBA;
+  --brand-2: #5B93D0;
+  --brand-3: #A3C2E6;
+  --tile-ink: #14202B;
+  --focus: #0B5CBA;
+  --shadow: 0 1px 2px rgba(20, 32, 43, .06), 0 12px 40px -12px rgba(20, 32, 43, .18);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0D1520;
+    --surface: #142030;
+    --sunken: #0A111A;
+    --ink: #E6EDF4;
+    --muted: #93A5B8;
+    --line: #22324A;
+    --brand: #6FA8EC;
+    --brand-2: #4F86C6;
+    --brand-3: #2C4F7C;
+    --focus: #8DBBF2;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 16px 48px -16px rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.6 Onest, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+a { color: var(--brand); text-underline-offset: 3px; }
+code, kbd, pre { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .86em; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+img { max-width: 100%; display: block; }
+.wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---------- top bar ---------- */
+.top { display: flex; align-items: center; gap: 24px; padding: 20px 0; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; color: var(--ink); text-decoration: none; }
+.brand img { width: 28px; height: 28px; }
+.top nav { margin-left: auto; display: flex; gap: 22px; font-size: 15px; }
+.top nav a { color: var(--muted); text-decoration: none; }
+.top nav a:hover { color: var(--ink); }
+
+/* ---------- hero ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 48px; align-items: end; padding: 40px 0 32px; }
+h1 {
+  margin: 0;
+  font-size: clamp(40px, 6.4vw, 76px);
+  line-height: .98;
+  letter-spacing: -.035em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+.lede { margin: 0 0 24px; font-size: 19px; color: var(--muted); max-width: 34em; text-wrap: pretty; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 13px 20px; border-radius: 10px;
+  font-weight: 600; font-size: 16px; line-height: 1; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+@media (prefers-color-scheme: dark) { .btn.primary { color: #08111C; } }
+.btn:hover { filter: brightness(1.06); }
+.fine { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+
+/* ---------- treemap ---------- */
+.map-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+.map-bar { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--line); min-height: 52px; flex-wrap: wrap; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 14px; min-width: 0; }
+.crumbs button { font: inherit; background: none; border: 0; color: var(--brand); padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.crumbs button:hover { background: var(--sunken); }
+.crumbs button[aria-current] { color: var(--ink); font-weight: 600; cursor: default; background: none; }
+.crumbs span { color: var(--muted); }
+.scanstat { margin-left: auto; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.map {
+  position: relative;
+  height: clamp(340px, 58vh, 620px);
+  margin: 6px;
+  user-select: none;
+}
+.tile {
+  position: absolute;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 0; padding: 0; margin: 0;
+  font: inherit; color: var(--tile-ink); text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(20, 32, 43, .08);
+  transition: filter .15s;
+}
+button.tile { cursor: zoom-in; }
+.tile:hover { filter: brightness(1.05) saturate(1.05); }
+.tile > .lbl {
+  position: absolute; inset: 0 0 auto 0; height: 22px; padding: 3px 7px 0;
+  font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none;
+}
+.tile > .lbl small { font-weight: 500; opacity: .7; margin-left: 6px; font-size: 12px; }
+.tile .in { position: absolute; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(20, 32, 43, .16); }
+.tile .ilbl { position: absolute; inset: 0 0 auto 0; padding: 1px 5px 0; font-size: 11px; font-weight: 500; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .8; pointer-events: none; }
+.tile.file > .lbl { height: auto; white-space: normal; }
+.map.reveal { animation: reveal 1.4s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes reveal { from { clip-path: inset(0 100% 0 0 round 10px); } to { clip-path: inset(0 0 0 0 round 10px); } }
+.tip {
+  position: fixed; z-index: 10; pointer-events: none; left: 0; top: 0;
+  background: var(--ink); color: var(--bg);
+  padding: 8px 11px; border-radius: 8px; font-size: 13px; line-height: 1.4;
+  max-width: 320px; box-shadow: var(--shadow); opacity: 0; transition: opacity .1s;
+}
+.tip b { display: block; font-weight: 600; word-break: break-all; }
+.tip span { opacity: .75; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px 14px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.map-note { font-size: 13px; color: var(--muted); padding: 0 16px 14px; margin: -6px 0 0; }
+
+/* ---------- sections ---------- */
+section { padding: 88px 0 0; }
+h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.05; letter-spacing: -.025em; margin: 0 0 14px; font-weight: 750; text-wrap: balance; }
+.intro { color: var(--muted); max-width: 40em; margin: 0 0 36px; font-size: 18px; text-wrap: pretty; }
+h3 { font-size: 19px; margin: 0 0 6px; letter-spacing: -.01em; }
+
+/* screenshots */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; background: var(--sunken); padding: 4px; border-radius: 12px; width: fit-content; max-width: 100%; }
+.tabs button { font: inherit; font-size: 15px; font-weight: 500; line-height: 1; border: 0; background: none; color: var(--muted); padding: 10px 16px; border-radius: 9px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.shot { display: grid; grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+.shot figure { margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--surface); }
+.shot figure img { width: 100%; height: auto; }
+.shot .cap h3 { font-size: 22px; margin-top: 6px; }
+.shot .cap p { color: var(--muted); margin: 0 0 14px; }
+.shot .cap ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.shot .cap li { margin-bottom: 6px; }
+.shot .cap li::marker { color: var(--brand); }
+
+/* speed */
+.speed { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+.bars { margin: 0; padding: 0; list-style: none; }
+.bars li { display: grid; grid-template-columns: minmax(0, 15em) minmax(0, 1fr); gap: 4px 16px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.bars .q code { font-size: 13px; color: var(--muted); }
+.bars .track { position: relative; height: 22px; }
+.bars .fill { position: absolute; inset: 0 auto 0 0; background: var(--brand-2); border-radius: 4px; min-width: 3px; }
+.bars .v { position: absolute; top: 0; line-height: 22px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; padding-left: 8px; white-space: nowrap; }
+.bars-note { font-size: 14px; color: var(--muted); margin: 14px 0 0; }
+.why { margin: 0; }
+.why dt { font-weight: 650; font-size: 17px; margin-top: 22px; }
+.why dt:first-child { margin-top: 0; }
+.why dd { margin: 4px 0 0; color: var(--muted); }
+.mem { display: flex; gap: 28px; flex-wrap: wrap; margin: 28px 0 0; }
+.mem div { font-size: 14px; color: var(--muted); }
+.mem b { display: block; font-size: 26px; color: var(--ink); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+/* query console */
+.console { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+.qform { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); align-items: center; }
+.qform svg { width: 20px; height: 20px; color: var(--muted); flex: none; margin-left: 4px; }
+.qform input {
+  flex: 1; min-width: 0; font: 500 17px/1.2 "JetBrains Mono", ui-monospace, monospace;
+  background: var(--sunken); color: var(--ink); border: 1px solid transparent; border-radius: 10px; padding: 12px 14px;
+}
+.qform input:focus { outline: none; border-color: var(--focus); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); }
+.chips button {
+  font: 500 13.5px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 8px 11px; border-radius: 8px;
+}
+.chips button:hover, .chips button[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); }
+.qexplain { padding: 12px 18px; font-size: 14.5px; color: var(--muted); border-bottom: 1px solid var(--line); min-height: 46px; }
+.qexplain b { color: var(--ink); font-weight: 600; }
+.results { list-style: none; margin: 0; padding: 6px 0; max-height: 360px; overflow: auto; }
+.results li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 7px 18px; font-size: 14.5px; }
+.results li:nth-child(odd) { background: color-mix(in srgb, var(--sunken) 55%, transparent); }
+.results i { width: 12px; height: 12px; border-radius: 3px; }
+.results .p { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+.results .p em { font-style: normal; font-weight: 600; color: var(--ink); }
+.results .s { font-variant-numeric: tabular-nums; font-weight: 600; }
+.results .empty { display: block; color: var(--muted); padding: 18px; }
+.syntax { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 0 40px; margin: 36px 0 0; padding: 0; list-style: none; }
+.syntax li { padding: 11px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 12em) minmax(0, 1fr); gap: 12px; font-size: 15px; }
+.syntax code { color: var(--brand); }
+.syntax span { color: var(--muted); }
+
+/* features */
+.feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px 56px; }
+.feat { border-top: 2px solid var(--ink); padding-top: 18px; }
+.feat p { margin: 0; color: var(--muted); }
+.feat .k { font-size: 14px; color: var(--muted); margin-top: 10px; display: block; }
+.feat code { color: var(--ink); background: var(--sunken); padding: 1px 6px; border-radius: 5px; }
+
+/* install */
+.install { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 56px; align-items: start; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li { counter-increment: s; position: relative; padding: 0 0 26px 52px; }
+.steps li::before {
+  content: counter(s); position: absolute; left: 0; top: -2px; width: 34px; height: 34px; border-radius: 9px;
+  background: var(--brand); color: var(--surface); display: grid; place-items: center; font-weight: 700;
+}
+.steps li:not(:last-child)::after { content: ""; position: absolute; left: 16px; top: 38px; bottom: 6px; width: 2px; background: var(--line); }
+.steps p { margin: 0; color: var(--muted); }
+.term { background: #0E1722; color: #D6E2EE; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid #22324A; margin-top: 8px; }
+.term-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 10px 16px; border-bottom: 1px solid #22324A; font-size: 13px; color: #8EA2B6; }
+.term-head button { font: inherit; font-weight: 500; background: #1B2A3D; color: #D6E2EE; border: 0; padding: 7px 11px; border-radius: 7px; cursor: pointer; }
+.term pre { margin: 0; padding: 18px; overflow-x: auto; line-height: 1.75; font-size: 13.5px; }
+.term .c { color: #6F86A0; }
+.term .k { color: #8DBBF2; }
+
+footer { margin-top: 110px; padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; }
+footer .brand { font-size: 16px; }
+footer a { color: var(--muted); }
+
+@media (max-width: 900px) {
+  .hero, .shot, .speed, .install { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .hero { padding-top: 16px; }
+  .top nav a.hide-sm { display: none; }
+  .bars li { grid-template-columns: minmax(0, 1fr); }
+  section { padding-top: 64px; }
+}
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .map { height: 420px; margin: 4px; }
+  .scanstat { margin-left: 0; width: 100%; white-space: normal; }
+  .syntax { grid-template-columns: minmax(0, 1fr); }
+  .syntax li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .tabs button { padding: 9px 11px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map.reveal { animation: none; }
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="wrap top">
+  <a class="brand" href="#"><img src="icon.png" alt="" width="28" height="28">Boyut</a>
+  <nav aria-label="Sayfa">
+    <a class="hide-sm" href="#ekran">Uygulama</a>
+    <a class="hide-sm" href="#hiz">Hız</a>
+    <a class="hide-sm" href="#arama">Arama</a>
+    <a href="#kurulum">Kurulum</a>
+    <a href="https://github.com/MihrimatriX/boyut">GitHub</a>
+  </nav>
+</header>
+
+<main>
+<div class="wrap">
+  <div class="hero">
+    <h1>Diskini neyin doldurduğunu bir bakışta gör.</h1>
+    <div>
+      <p class="lede">Boyut, Windows için bir klasör ve disk analiz aracı. NTFS sürücülerde dosya tablosunu (MFT) doğrudan okur. <strong>Tam bir C: sürücüsünü birkaç saniyede tarar</strong>, kaplanan alanı treemap üzerinde gösterir ve neyi güvenle silebileceğinizi söyler.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/MihrimatriX/boyut/releases/latest/download/Boyut-win-x64.zip">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12"/></svg>
+          Windows için indir
+        </a>
+        <a class="btn" href="https://github.com/MihrimatriX/boyut">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          Kaynak kodu
+        </a>
+      </div>
+      <p class="fine">Sürüm 0.1.0, Windows 10 2004 ve üstü, x64. Kurulum gerekmez: zip'i açıp <code>Boyut.exe</code>'yi çalıştırın. Ücretsiz ve açık kaynak.</p>
+    </div>
+  </div>
+
+  <div class="map-shell" id="demo">
+    <div class="map-bar">
+      <nav class="crumbs" id="crumbs" aria-label="Konum"></nav>
+      <div class="scanstat" id="scanstat" aria-live="polite"></div>
+    </div>
+    <div class="map" id="map" role="group" aria-label="Örnek bir C: sürücüsünün treemap görünümü"></div>
+    <div class="legend" id="legend"></div>
+    <p class="map-note">Bu gerçek bir tarama değil, örnek bir sürücü. Bir klasöre tıklayınca içine girersiniz, yukarıdaki yoldan geri dönersiniz. Uygulamadaki karolar da aynı yerleşim algoritmasıyla (squarified treemap) ve aynı renklerle çizilir.</p>
+  </div>
+</div>
+
+<section id="ekran">
+  <div class="wrap">
+    <h2>Uygulamanın içi</h2>
+    <p class="intro">Windows 11'in Fluent tasarımıyla yazılmış yerel bir uygulama: Mica arka plan, açık ve koyu tema, klavye kısayolları. Arayüz normal kullanıcı yetkisiyle çalışır, böylece Gezgin'den sürükle bırak çalışmaya devam eder. Hızlı tarama için gereken yönetici iznini ayrı bir yardımcı süreç ister.</p>
+    <div class="tabs" role="tablist" aria-label="Ekranlar" id="tabs"></div>
+    <div class="shot">
+      <figure><img id="shotImg" src="ekran-agac.png" alt="Boyut uygulaması, klasör ağacı ekranı" width="1346" height="873"></figure>
+      <div class="cap" id="shotCap" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="hiz">
+  <div class="wrap">
+    <h2>Neden bu kadar hızlı</h2>
+    <p class="intro">Klasik araçlar her klasörü tek tek listeler. Boyut NTFS'in dosya tablosunu ham olarak okur, yani bütün diski birkaç büyük ardışık okumayla alır. Sonrasında her şey bellekteki sıkı dizilerin üzerinde çalışır.</p>
+    <div class="speed">
+      <div>
+        <ul class="bars" id="bars"></ul>
+        <p class="bars-note">Ölçümler 1,3 milyon düğümlük sentetik bir indeks üzerinde, 2 çekirdekli bir konteynerde alındı. Bu, tam bir C: sürücüsü büyüklüğünde. Sıradan bir masaüstünde sonuçlar daha iyi olur.</p>
+        <div class="mem">
+          <div><b>108 MB</b>1,3 milyon düğüm için bellek</div>
+          <div><b>34 MB</b>aynı taramanın diskteki boyutu</div>
+          <div><b>&lt; 1 sn</b>USN ile güncelleme</div>
+        </div>
+      </div>
+      <dl class="why">
+        <dt>Ham MFT okuma</dt>
+        <dd><code>FindFirstFile</code> ile klasör klasör dolaşmak 5 ile 20 kat daha yavaş. <code>FSCTL_ENUM_USN_DATA</code> ise dosya boyutu vermiyor. Boyut $MFT kayıtlarını kendisi ayrıştırır: fixup, runlist, hard link, alternatif veri akışları ve WOF sıkıştırması dahil.</dd>
+        <dt>Nesne değil dizi</dt>
+        <dd>Her dosya için bir nesne yerine paralel diziler (<code>int[] parent</code>, <code>long[] size</code>) ve tek bir ad havuzu kullanılır. Bellek kullanımı birkaç kat azalır, arama da tek bir sıkı döngüye dönüşür.</dd>
+        <dt>Genişlik öncelikli sıra</dt>
+        <dd>Her düğüm üst klasöründen sonra gelir. Bu sayede klasör toplamları sondan başa tek bir geçişte hesaplanır.</dd>
+        <dt>Değişiklik günlüğüyle güncelleme</dt>
+        <dd>Her tarama NTFS değişiklik günlüğünün (USN Journal) o anki konumunu kaydeder. Güncelle (F5) yalnızca o andan beri değişen klasörleri yeniden okur ve bunun için yönetici izni gerekmez.</dd>
+        <dt>Hard link bir kez sayılır</dt>
+        <dd>WinSxS gibi klasörlerde aynı dosyanın birden çok adı vardır. Hepsi ağaçta görünür ama boyut yalnızca bir kez eklenir, bu yüzden Gezgin'deki şişkin rakamları görmezsiniz.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="arama">
+  <div class="wrap">
+    <h2>Dosyalarınızı sorguyla bulun</h2>
+    <p class="intro">Ad, boyut, tür, tarih, konum ve öznitelik aynı satırda birleşir. Aşağıdaki konsol yukarıdaki örnek sürücüde gerçekten arama yapar. Bir örneğe tıklayın ya da kendi sorgunuzu yazın.</p>
+    <div class="console">
+      <form class="qform" id="qform" role="search">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
+        <label class="sr" for="q">Sorgu</label>
+        <input id="q" autocomplete="off" spellcheck="false" value="type:video size:>1gb">
+      </form>
+      <div class="chips" id="chips"></div>
+      <div class="qexplain" id="qexplain" aria-live="polite"></div>
+      <ul class="results" id="results"></ul>
+    </div>
+    <ul class="syntax">
+      <li><code>*.mp4;*.mkv</code><span>Joker karakter. <code>;</code> "veya" anlamına gelir.</span></li>
+      <li><code>**\node_modules</code><span>Her derinlikte eşleşir.</span></li>
+      <li><code>size:10mb..500mb</code><span>Aralık, <code>&gt;</code>, <code>&lt;</code> ya da <code>empty</code>.</span></li>
+      <li><code>type:video,görsel</code><span>Dosya türü. <code>kind:dir</code> yalnızca klasörleri getirir.</span></li>
+      <li><code>modified:&lt;2024-06</code><span>Tarih. <code>age:&gt;90d</code> ve <code>modified:bugün</code> de çalışır.</span></li>
+      <li><code>attr:hidden,cloud</code><span>Gizli, sistem, bağlantı, bulut, hard link, sıkıştırılmış.</span></li>
+      <li><code>in:"*\Steam\*"</code><span>Belli bir klasörün altında arar.</span></li>
+      <li><code>-*.log -in:Windows</code><span>Başa eklenen <code>-</code> sonucu hariç tutar.</span></li>
+      <li><code>boyut: uzantı: tür:</code><span>Anahtarların Türkçe karşılıkları da çalışır.</span></li>
+      <li><code>IMG_[0-9]???.*</code><span>Karakter sınıfları. Tırnak içi düz metin olarak aranır.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="ozellikler">
+  <div class="wrap">
+    <h2>Taramadan sonra</h2>
+    <p class="intro">Hangi klasörün büyük olduğunu bilmek işin yarısı. Geri kalanı neyin güvenle silinebileceğini, neyin büyümeye devam ettiğini ve aynı dosyanın kaç kopyası olduğunu bilmek.</p>
+    <div class="feats">
+      <div class="feat">
+        <h3>Temizlik önerileri</h3>
+        <p><code>node_modules</code>, derleme çıktıları, tarayıcı ve paket önbellekleri, Windows Update artıkları. Her öneri "güvenli", "gözden geçir" ya da "dokunma" olarak işaretlenir ve nedeni yazılır.</p>
+      </div>
+      <div class="feat">
+        <h3>Kopya bulucu</h3>
+        <p>Önce boyuta, sonra dosyaların içeriğine bakar. OneDrive gibi bulut yer tutucuları asla açılmaz, yani tarama sırasında hiçbir şey kendiliğinden indirilmez.</p>
+      </div>
+      <div class="feat">
+        <h3>Değişimler</h3>
+        <p>Her tarama geçmişe kaydedilir. Aynı sürücünün iki taramasını karşılaştırıp neyin büyüdüğünü, eklendiğini ve silindiğini ağaç olarak görürsünüz. Büyümenin çoğunun hangi klasörden geldiği de yazar.</p>
+        <span class="k">Komut satırında: <code>boyut diff C:\</code></span>
+      </div>
+      <div class="feat">
+        <h3>Arka plan izleme</h3>
+        <p>Görev Zamanlayıcı seçtiğiniz sürücüleri günde ya da saatte bir tarar. Boş alan eşiğin altına düştüğünde veya sürücü hızla büyüdüğünde bildirim gelir. Bildirime tıklayınca Değişimler sayfası açılır.</p>
+      </div>
+      <div class="feat">
+        <h3>Güvenli silme</h3>
+        <p>Silinen her şey önce Geri Dönüşüm Kutusu'na gider ve indeksten anında çıkarılır. Yeniden taramanız gerekmez, yanlışlıkla sildiğinizi de geri alabilirsiniz.</p>
+      </div>
+      <div class="feat">
+        <h3>Gezgin'de sağ tık</h3>
+        <p>Windows 11'in yeni bağlam menüsünün üst düzeyine "Boyut ile analiz et" eklenir. İmza ya da yönetici izni gerekmez, Geliştirici Modu açık olmalıdır.</p>
+        <span class="k">Kurulum: <code>tools\register-modern-context-menu.ps1</code></span>
+      </div>
+      <div class="feat">
+        <h3>Dışa aktarma</h3>
+        <p>Tüm ağacı ya da seçili klasörü CSV olarak alabilirsiniz. Taramayı Brotli ile sıkıştırılmış bir <code>.boyut</code> dosyası olarak kaydedip başka bir bilgisayarda açabilirsiniz.</p>
+      </div>
+      <div class="feat">
+        <h3>Komut satırı</h3>
+        <p>Aynı çekirdek <code>boyut.exe</code> olarak da gelir. Tarama, arama, temizlik analizi, kopya bulma, fark ve güncelleme betiklerden çalıştırılabilir.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kurulum">
+  <div class="wrap install">
+    <div>
+      <h2>Kurulum</h2>
+      <p class="intro">Yükleyici yok. .NET ve Windows App SDK paketin içinde, ayrıca bir şey kurmanız gerekmez.</p>
+      <ol class="steps">
+        <li><h3>İndirin</h3><p><a href="https://github.com/MihrimatriX/boyut/releases/latest">Son sürüm</a> sayfasından <code>Boyut-win-x64.zip</code> dosyasını alın. Komut satırı aracı aynı sayfada <code>boyut-cli-win-x64.zip</code> olarak durur.</p></li>
+        <li><h3>Açın</h3><p>Zip'i bir klasöre çıkarın ve <code>Boyut.exe</code>'yi çalıştırın. SmartScreen uyarısı çıkarsa önce "Ek bilgi"ye, ardından "Yine de çalıştır"a tıklayın; uygulama henüz imzalı değil.</p></li>
+        <li><h3>Tarayın</h3><p>Bir sürücü seçin. NTFS'te hızlı tarama için bir kez yönetici izni istenir. İzin vermezseniz Boyut klasör taramasıyla devam eder.</p></li>
+      </ol>
+    </div>
+    <div class="term">
+      <div class="term-head"><span>PowerShell</span><button type="button" id="copy">Kopyala</button></div>
+<pre id="cli"><span class="c"># Kaynaktan derleme (.NET 10 SDK)</span>
+git clone https://github.com/MihrimatriX/boyut
+cd boyut
+./build.ps1 -Run
+
+<span class="c"># Komut satırı aracı</span>
+<span class="k">boyut</span> scan C:\ --depth 2
+<span class="k">boyut</span> search C:\ "*.mp4;*.mkv size:>1gb"
+<span class="k">boyut</span> cleanup D:\Projeler
+<span class="k">boyut</span> dupes D:\Fotoğraflar --min-size 5mb
+<span class="k">boyut</span> diff C:\
+<span class="k">boyut</span> refresh C:\</pre>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <a class="brand" href="#"><img src="icon.png" alt="" width="22" height="22">Boyut</a>
+  <span>C# ve WinUI 3 ile yazıldı.</span>
+  <a href="https://github.com/MihrimatriX/boyut">Kaynak kodu</a>
+  <a href="https://github.com/MihrimatriX/boyut/releases">Sürümler</a>
+  <a href="https://github.com/MihrimatriX/boyut/issues">Hata bildir</a>
+</footer>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+'use strict';
+// ---------- colours: same values as src/Boyut.App/Services/Ui.cs ----------
+const PALETTE = ['#8AB8EE', '#F3B37C', '#8FD0AE', '#C6A9EC', '#F0A5B7', '#E3CA74', '#A5BCCD', '#9DD3E0', '#D9B8A0', '#B9D58A'];
+const CAT = {
+  video: ['Video', '#F0A35E'], audio: ['Ses', '#7FC8C0'], image: ['Görsel', '#E58BA2'], doc: ['Belge', '#62BC8E'],
+  archive: ['Arşiv', '#B48DE6'], disk: ['Disk imajı', '#9A86D8'], code: ['Kod', '#6FA8DC'], exe: ['Uygulama', '#5B9BE6'],
+  game: ['Oyun ve 3D', '#D4A373'], sys: ['Sistem ve log', '#8FA6BA'], other: ['Diğer', '#C9CED3'],
+};
+
+// ---------- formatting ----------
+const nf1 = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
+const nf0 = new Intl.NumberFormat('tr-TR');
+const UNITS = ['bayt', 'KB', 'MB', 'GB', 'TB'];
+function fmtSize(b) {
+  let i = 0;
+  while (b >= 1024 && i < UNITS.length - 1) { b /= 1024; i++; }
+  return (i ? nf1.format(b) : nf0.format(b)) + ' ' + UNITS[i];
+}
+const KB = 1024, MB = KB * 1024, GB = MB * 1024;
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// ---------- sample drive (seeded, so every visitor sees the same disk) ----------
+let seed = 20251022;
+function rnd() { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+const pick = a => a[Math.floor(rnd() * a.length)];
+const pad = (n, w) => String(n).padStart(w, '0');
+
+const KINDS = {
+  video: { cat: 'video', name: () => `VID_2025${pad(1 + rnd() * 12 | 0, 2)}${pad(1 + rnd() * 28 | 0, 2)}_${pad(rnd() * 1e6 | 0, 6)}.${pick(['mp4', 'mp4', 'mkv', 'mov'])}` },
+  movie: { cat: 'video', name: () => `${pick(['Belgesel', 'Konser', 'Ders', 'Sunum', 'Tatil', 'Düğün', 'Doğum günü'])} ${2018 + (rnd() * 8 | 0)}${pick(['', ' (1)', ' - kısım 2', ' 4K'])}.${pick(['mkv', 'mp4'])}` },
+  photo: { cat: 'image', name: () => `${pick(['IMG_', 'IMG_', 'DSC0', 'PXL_2025'])}${pad(rnd() * 9999 | 0, 4)}.${pick(['jpg', 'jpg', 'heic', 'cr3', 'png'])}` },
+  music: { cat: 'audio', name: () => `${pad(1 + rnd() * 14 | 0, 2)} - ${pick(['Giriş', 'Akşam', 'Yol', 'Deniz', 'Rüzgar', 'Son'])}.${pick(['flac', 'mp3', 'mp3'])}` },
+  docs: { cat: 'doc', name: () => `${pick(['Rapor', 'Fatura', 'Sözleşme', 'Tez', 'Sunum', 'Bütçe', 'Notlar'])}_${2021 + (rnd() * 5 | 0)}.${pick(['pdf', 'pdf', 'docx', 'xlsx', 'pptx'])}` },
+  dl: { cat: 'archive', name: () => `${pick(['kurulum', 'yedek', 'proje', 'fotolar', 'surucu', 'arsiv'])}_${pad(rnd() * 999 | 0, 3)}.${pick(['zip', 'zip', '7z', 'rar'])}` },
+  iso: { cat: 'disk', name: () => `${pick(['Win11_24H2_Turkish_x64', 'ubuntu-24.04-desktop-amd64', 'Fedora-Workstation-41', 'debian-12-amd64'])}.${pick(['iso', 'iso', 'vhdx'])}` },
+  setup: { cat: 'exe', name: () => `${pick(['Setup', 'Installer', 'Kurulum', 'Update'])}_${pad(rnd() * 999 | 0, 3)}.${pick(['exe', 'msi'])}` },
+  dll: { cat: 'exe', name: () => `${pick(['core', 'render', 'net', 'media', 'ui', 'crypt', 'gfx', 'audio'])}${pick(['', '32', '64', 'svc'])}_${pad(rnd() * 99 | 0, 2)}.${pick(['dll', 'dll', 'exe', 'sys'])}` },
+  code: { cat: 'code', name: () => `${pick(['index', 'main', 'bundle', 'vendor', 'chunk', 'app', 'types'])}.${pad(rnd() * 999 | 0, 3)}.${pick(['js', 'ts', 'map', 'json', 'node', 'wasm'])}` },
+  game: { cat: 'game', name: () => `${pick(['pakchunk', 'data', 'textures', 'audio', 'world', 'shaders'])}${pad(rnd() * 99 | 0, 2)}.${pick(['pak', 'pak', 'bin', 'archive', 'vpk'])}` },
+  sys: { cat: 'sys', name: () => `${pick(['cache', 'store', 'trace', 'index', 'catalog', 'update'])}_${pad(rnd() * 9999 | 0, 4)}.${pick(['dat', 'log', 'etl', 'cab', 'db', 'tmp'])}` },
+  font: { cat: 'other', name: () => `${pick(['segoe', 'arial', 'times', 'consola', 'calibri', 'cambria'])}${pick(['', 'b', 'i', 'z'])}.${pick(['ttf', 'ttc', 'otf'])}` },
+};
+
+// leaf folder with `count` files of `kind`; power-law sizes that add up to `gb`
+function G(name, gb, kind, count) {
+  const w = Array.from({ length: count }, () => Math.pow(rnd() + .02, -1.6));
+  const sum = w.reduce((a, b) => a + b, 0);
+  const k = KINDS[kind];
+  return { name, children: w.map(x => ({ name: k.name(), size: Math.round(gb * GB * x / sum), cat: k.cat })) };
+}
+const F = (name, gb, cat) => ({ name, size: Math.round(gb * GB), cat });
+const D = (name, ...children) => ({ name, children });
+
+const DRIVE = D('C:',
+  D('Users',
+    D('Deniz',
+      D('Videos', G('Telefon', 21, 'video', 70), G('Kurgu', 14.5, 'movie', 18), G('Ekran kayıtları', 6.2, 'video', 30)),
+      D('Pictures', G('Kamera', 11.8, 'photo', 140), G('2024 Kapadokya', 4.4, 'photo', 90), G('Ekran görüntüleri', .9, 'photo', 80)),
+      D('Downloads', G('İmajlar', 17.6, 'iso', 4), G('Arşivler', 8.3, 'dl', 26), G('Kurulumlar', 3.9, 'setup', 22), G('Belgeler', .7, 'docs', 40)),
+      D('Documents', G('İş', 2.6, 'docs', 60), G('Okul', 1.1, 'docs', 40), G('Müzik', 5.4, 'music', 70)),
+      D('Projeler',
+        D('web-site', G('node_modules', 1.9, 'code', 120), G('.next', .6, 'code', 30), G('src', .05, 'code', 30)),
+        D('mobil-uygulama', G('node_modules', 2.4, 'code', 120), G('build', 1.7, 'code', 30), G('android', .9, 'code', 40)),
+        D('oyun-motoru', G('Library', 3.8, 'game', 60), G('Assets', 2.2, 'game', 40), G('.git', 1.1, 'sys', 20))),
+      D('AppData',
+        D('Local', G('Temp', 6.3, 'sys', 60), G('npm-cache', 3.1, 'code', 50), G('Google', 2.7, 'sys', 30), G('Packages', 4.8, 'sys', 40), G('Docker', 9.6, 'iso', 3)),
+        D('Roaming', G('Discord', 1.2, 'sys', 20), G('Code', .9, 'code', 40), G('Spotify', 3.4, 'music', 30))),
+      F('NTUSER.DAT', .02, 'sys')),
+    D('Public', G('Documents', .3, 'docs', 10))),
+  D('Program Files (x86)',
+    D('Steam',
+      D('steamapps',
+        D('common', G("Baldur's Gate 3", 96, 'game', 40), G('Cyberpunk 2077', 64, 'game', 36), G('Counter-Strike 2', 29, 'game', 30), G('Hades II', 9.2, 'game', 14)),
+        G('shadercache', 4.1, 'sys', 20), G('downloading', 2.2, 'game', 6))),
+    G('Microsoft', 2.3, 'dll', 40), G('Common Files', 1.4, 'dll', 30)),
+  D('Program Files',
+    G('Adobe', 13.4, 'dll', 60), G('Microsoft Office', 4.2, 'dll', 50), G('JetBrains', 5.1, 'dll', 40),
+    G('NVIDIA Corporation', 2.3, 'dll', 30), G('Docker', 3.2, 'dll', 20), G('dotnet', 1.2, 'dll', 40), G('WindowsApps', 7.8, 'dll', 60)),
+  D('Windows',
+    G('WinSxS', 9.6, 'dll', 80), G('System32', 6.1, 'dll', 90), G('Installer', 4.2, 'setup', 30),
+    G('SoftwareDistribution', 2.4, 'sys', 30), G('SysWOW64', 1.6, 'dll', 60), G('Fonts', .6, 'font', 40), G('Logs', .4, 'sys', 30)),
+  F('pagefile.sys', 16, 'sys'),
+  F('hiberfil.sys', 12.7, 'sys'),
+  D('ProgramData', G('Microsoft', 3.1, 'sys', 30), G('NVIDIA', 1.4, 'sys', 20), G('Package Cache', 2.3, 'setup', 30)),
+  D('$Recycle.Bin', G('S-1-5-21', 4.6, 'dl', 18)),
+);
+
+// folder sizes, parents and file counts; children sorted largest first like the app
+(function finish(n, parent) {
+  n.parent = parent;
+  if (!n.children) { n.files = 1; return n.size; }
+  n.size = 0; n.files = 0;
+  for (const c of n.children) { n.size += finish(c, n); n.files += c.files; }
+  n.children.sort((a, b) => b.size - a.size);
+  return n.size;
+})(DRIVE, null);
+
+const pathOf = n => { const p = []; for (let x = n; x; x = x.parent) p.unshift(x.name); return p.join('\\'); };
+const colorOf = (n, i) => n.children ? PALETTE[i % PALETTE.length] : CAT[n.cat][1];
+
+// ---------- squarified treemap: port of src/Boyut.Core/Layout/Squarifier.cs ----------
+function squarify(values, x, y, width, height) {
+  const out = values.map(() => null);
+  let total = 0;
+  for (const v of values) if (v > 0) total += v;
+  if (!values.length || width <= 0 || height <= 0 || total <= 0) return out;
+  const scale = width * height / total;
+  const area = values.map(v => v > 0 ? v * scale : 0);
+  const order = values.map((_, i) => i).filter(i => values[i] > 0).sort((a, b) => area[b] - area[a]);
+  const worst = (s, e, sum, side) => {
+    let max = 0, min = Infinity;
+    for (let k = s; k < e; k++) { const a = area[order[k]]; if (a > max) max = a; if (a < min) min = a; }
+    const s2 = side * side, sum2 = sum * sum;
+    return Math.max(s2 * max / sum2, sum2 / (s2 * min));
+  };
+  let cx = x, cy = y, cw = width, ch = height, start = 0;
+  while (start < order.length) {
+    const side = Math.min(cw, ch);
+    let end = start, rowSum = 0, w = Infinity;
+    while (end < order.length) {
+      const cand = rowSum + area[order[end]];
+      const candWorst = worst(start, end + 1, cand, side);
+      if (end > start && candWorst > w) break;
+      rowSum = cand; w = candWorst; end++;
+    }
+    if (cw >= ch) {
+      const rw = rowSum / ch; let py = cy;
+      for (let k = start; k < end; k++) { const h = area[order[k]] / rw; out[order[k]] = [cx, py, rw, h]; py += h; }
+      cx += rw; cw -= rw;
+    } else {
+      const rh = rowSum / cw; let px = cx;
+      for (let k = start; k < end; k++) { const ww = area[order[k]] / rh; out[order[k]] = [px, cy, ww, rh]; px += ww; }
+      cy += rh; ch -= rh;
+    }
+    start = end;
+  }
+  return out;
+}
+
+// ---------- treemap view ----------
+const mapEl = document.getElementById('map');
+const crumbsEl = document.getElementById('crumbs');
+const statEl = document.getElementById('scanstat');
+const tip = document.getElementById('tip');
+let current = DRIVE;
+let scanning = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const GAP = 3, HEAD = 22;
+
+// lighter variants of the parent colour, so nested folders read as part of their parent
+function shade(color, j) {
+  const f = [.14, .26, .06, .34, .2, .1, .3][j % 7];
+  const n = parseInt(color.slice(1), 16);
+  const rgb = color[0] === '#' ? [n >> 16, n >> 8 & 255, n & 255] : color.match(/\d+/g).map(Number);
+  const [r, g, b] = rgb.map(c => Math.round(c + (255 - c) * f));
+  return `rgb(${r},${g},${b})`;
+}
+
+// deeper levels drawn inside a folder tile, until the boxes get too small to read
+function nest(parentEl, n, x, y, w, h, color, depth) {
+  if (w < 6 || h < 6 || depth > 7) return;
+  const rects = squarify(n.children.map(c => c.size), x, y, w, h);
+  n.children.forEach((c, j) => {
+    const q = rects[j];
+    if (!q || q[2] < 3 || q[3] < 3) return;
+    const d = document.createElement('div');
+    const cw = q[2] - 2, chh = q[3] - 2;
+    const fill = c.children ? shade(color, j + depth) : CAT[c.cat][1];
+    d.className = 'in';
+    d.style.cssText = `left:${q[0] + 1}px;top:${q[1] + 1}px;width:${cw}px;height:${chh}px;background:${fill}`;
+    d.node = c;
+    parentEl.appendChild(d);
+    if (!c.children) return;
+    const labelled = cw > 70 && chh > 40;
+    if (labelled) {
+      const l = document.createElement('div');
+      l.className = 'ilbl';
+      l.textContent = c.name;
+      d.appendChild(l);
+    }
+    nest(d, c, 2, labelled ? 16 : 2, cw - 4, chh - (labelled ? 18 : 4), fill, depth + 1);
+  });
+}
+
+function render() {
+  const W = mapEl.clientWidth, H = mapEl.clientHeight;
+  const kids = current.children;
+  const rects = squarify(kids.map(k => k.size), 0, 0, W, H);
+  const frag = document.createDocumentFragment();
+  kids.forEach((n, i) => {
+    const r = rects[i];
+    if (!r) return;
+    const x = r[0] + GAP / 2, y = r[1] + GAP / 2, w = r[2] - GAP, h = r[3] - GAP;
+    if (w < 2 || h < 2) return;
+    const color = colorOf(n, i);
+    const el = document.createElement(n.children ? 'button' : 'div');
+    el.className = 'tile' + (n.children ? '' : ' file');
+    el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${color}`;
+    el.node = n;
+    if (n.children) {
+      el.type = 'button';
+      el.setAttribute('aria-label', `${n.name}, ${fmtSize(n.size)}. İçine gir`);
+      el.addEventListener('click', () => go(n));
+    }
+    if (w > 44 && h > 18) {
+      const l = document.createElement('div');
+      l.className = 'lbl';
+      l.innerHTML = esc(n.name) + (w > 150 ? `<small>${fmtSize(n.size)}</small>` : '');
+      el.appendChild(l);
+    }
+    if (n.children) nest(el, n, 4, HEAD, w - 8, h - HEAD - 4, color, 1);
+    frag.appendChild(el);
+  });
+  mapEl.replaceChildren(frag);
+  renderCrumbs();
+}
+
+function renderCrumbs() {
+  const chain = [];
+  for (let x = current; x; x = x.parent) chain.unshift(x);
+  crumbsEl.replaceChildren(...chain.flatMap((n, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = n.name;
+    if (n === current) b.setAttribute('aria-current', 'location');
+    else b.addEventListener('click', () => go(n));
+    if (i === 0) return [b];
+    const s = document.createElement('span');
+    s.textContent = '›';
+    s.setAttribute('aria-hidden', 'true');
+    return [s, b];
+  }));
+  if (!scanning) statLine();
+}
+function statLine() {
+  statEl.textContent = `${fmtSize(current.size)}, ${nf0.format(current.files)} dosya` +
+    (current === DRIVE ? `, 476 GB'lık diskin %${nf1.format(DRIVE.size / (476 * GB) * 100)}'i dolu` : `, sürücünün %${nf1.format(current.size / DRIVE.size * 100)}'i`);
+}
+
+function go(n) { current = n; render(); hideTip(); }
+
+// hover readout
+mapEl.addEventListener('pointermove', e => {
+  const t = e.target.closest('.in, .tile');
+  if (!t || !t.node) return hideTip();
+  const n = t.node;
+  tip.innerHTML = `<b>${esc(pathOf(n))}</b>${fmtSize(n.size)}<span>, buradakinin %${nf1.format(n.size / current.size * 100)}'i` +
+    (n.children ? `, ${nf0.format(n.files)} dosya` : `, ${CAT[n.cat][0]}`) + '</span>';
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 18 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 12 : e.clientY + 18;
+  tip.style.transform = `translate(${x}px, ${y}px)`;
+  tip.style.opacity = 1;
+});
+mapEl.addEventListener('pointerleave', hideTip);
+function hideTip() { tip.style.opacity = 0; }
+
+document.getElementById('legend').innerHTML =
+  `<span><i style="background:${PALETTE[0]}"></i>Klasör</span>` +
+  Object.values(CAT).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
+
+render();
+new ResizeObserver(() => render()).observe(mapEl);
+
+// first paint: a short "scan" while the map wipes in
+if (scanning) {
+  mapEl.classList.add('reveal');
+  const t0 = performance.now(), dur = 1400;
+  (function tick(now) {
+    const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    statEl.textContent = `MFT okunuyor… ${nf0.format(Math.round(1284512 * e))} kayıt`;
+    if (p < 1) return requestAnimationFrame(tick);
+    statEl.textContent = '1.284.512 kayıt okundu';
+    setTimeout(() => { scanning = false; statLine(); }, 1600);
+  })(t0);
+}
+
+// ---------- screenshots ----------
+const SHOTS = [
+  { id: 'agac', tab: 'Klasör ağacı', title: 'Ağaç ve treemap yan yana', text: 'Solda boyuta göre sıralanmış klasör ağacı, sağda aynı klasörün treemap görünümü durur. Birinde seçtiğiniz öğe diğerinde de seçilir.', list: ['Gerçek boyut ile diskte kaplanan alan ayrı gösterilir', 'Sağ tıkla Gezgin\'de göster, Geri Dönüşüm\'e taşı, yolu kopyala', 'Seçili klasörü tek başına yeniden tarama'] },
+  { id: 'arama', tab: 'Gelişmiş arama', title: 'Bir milyon dosyada anında arama', text: 'Sorgu bellekteki indeks üzerinde paralel çalışır. Sonuçlar boyuta, tarihe ya da yola göre sıralanır ve CSV olarak dışa aktarılabilir.', list: ['Joker karakter, düzenli ifade ve tam yol desenleri', 'Boyut, tarih, tür, öznitelik ve konum filtreleri', 'Sonuçlar üzerinde toplu silme'] },
+  { id: 'temizlik', tab: 'Temizlik ve türler', title: 'Ne kadar yer açabileceğinizi görün', text: 'Bilinen önbellekler, derleme çıktıları ve geçici dosyalar tek listede toplanır. Her biri için ne olduğu ve silmenin güvenli olup olmadığı yazılır.', list: ['Dosya türlerine göre dağılım', 'İçerik karşılaştıran kopya bulucu', 'Güvenli, gözden geçir, dokunma etiketleri'] },
+  { id: 'degisimler', tab: 'Değişimler', title: 'Son taramadan beri ne büyüdü?', text: 'Aynı sürücünün iki taraması karşılaştırılır. Büyüyen, eklenen ve silinen klasörler fark büyüklüğüne göre sıralanmış bir ağaç olarak gelir.', list: ['Her tarama kendiliğinden geçmişe kaydedilir', 'Arka plan izlemesinin uyarıları bu sayfayı açar', 'Komut satırında: boyut diff'] },
+];
+const tabsEl = document.getElementById('tabs'), img = document.getElementById('shotImg'), cap = document.getElementById('shotCap');
+SHOTS.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.textContent = s.tab;
+  b.addEventListener('click', () => showShot(i));
+  b.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    const j = (i + d + SHOTS.length) % SHOTS.length;
+    showShot(j);
+    tabsEl.children[j].focus();
+  });
+  tabsEl.appendChild(b);
+});
+function showShot(i) {
+  const s = SHOTS[i];
+  [...tabsEl.children].forEach((b, j) => { b.setAttribute('aria-selected', i === j); b.tabIndex = i === j ? 0 : -1; });
+  img.src = `ekran-${s.id}.png`;
+  img.alt = `Boyut uygulaması, ${s.tab} ekranı`;
+  cap.innerHTML = `<h3>${s.title}</h3><p>${s.text}</p><ul>${s.list.map(x => `<li>${x}</li>`).join('')}</ul>`;
+}
+showShot(0);
+addEventListener('load', () => SHOTS.forEach(s => { new Image().src = `ekran-${s.id}.png`; }));
+
+// ---------- speed bars (numbers from the README "Ölçümler" table) ----------
+const BARS = [
+  ['İndeksi kurma, toplamlar ve sıralama dahil', 1.5],
+  ['Temizlik analizi, tüm kurallar', 1.1],
+  ['Tam yol deseni <code>**\\Klasör_1*\\*.log</code>', .8],
+  ['Taramayı kaydetme (34 MB)', .5],
+  ['Taramayı yükleme', .45],
+  ['Silinenleri indeksten çıkarma', .17],
+  ['Düzenli ifade araması', .14],
+  ['<code>type:image size:>1mb</code>', .1],
+];
+document.getElementById('bars').innerHTML = BARS.map(([q, s]) => {
+  const pct = s / 1.9 * 100;
+  return `<li><span class="q">${q}</span><span class="track"><span class="fill" style="width:${pct}%"></span><span class="v" style="left:${pct}%">${nf1.format(s)} sn</span></span></li>`;
+}).join('');
+
+// ---------- query console: a subset of src/Boyut.Core/Search/Query.cs ----------
+const ALL = [];
+(function walk(n) { for (const c of n.children || []) { ALL.push(c); walk(c); } })(DRIVE);
+
+const fold = s => s.toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+const KEY = { size: 'size', boyut: 'size', ext: 'ext', uzanti: 'ext', type: 'type', tur: 'type', kind: 'kind', in: 'in', konum: 'in' };
+const LATER = ['modified', 'tarih', 'age', 'yas', 'attr', 'oznitelik'];
+const TYPES = {
+  video: 'video', film: 'video', audio: 'audio', ses: 'audio', muzik: 'audio', image: 'image', gorsel: 'image', resim: 'image', foto: 'image',
+  document: 'doc', belge: 'doc', archive: 'archive', arsiv: 'archive', diskimage: 'disk', diskimaji: 'disk', iso: 'disk', code: 'code', kod: 'code',
+  executable: 'exe', uygulama: 'exe', program: 'exe', game: 'game', oyun: 'game', system: 'sys', sistem: 'sys', other: 'other', diger: 'other',
+};
+
+// glob → regex: * and ? stay inside one path segment, ** crosses them; a bare word matches anywhere in the name
+function globRe(g) {
+  if (!/[*?[]/.test(g)) g = `*${g}*`;
+  let r = '';
+  for (let i = 0; i < g.length; i++) {
+    const c = g[i];
+    if (c === '*' && g[i + 1] === '*') { r += '(?:.*\\\\)?'; i++; if (g[i + 1] === '\\') i++; }
+    else if (c === '*') r += '[^\\\\]*';
+    else if (c === '?') r += '[^\\\\]';
+    else if (c === '[') { const e = g.indexOf(']', i); if (e > i) { r += g.slice(i, e + 1); i = e; } else r += '\\['; }
+    else r += c.replace(/[.+^${}()|\]\\]/g, '\\$&');
+  }
+  return new RegExp('^' + r + '$', 'i');
+}
+function parseSize(s) {
+  const m = /^(\d+(?:[.,]\d+)?)\s*(b|kb|mb|gb|tb)?$/i.exec(s);
+  return m ? parseFloat(m[1].replace(',', '.')) * { b: 1, kb: KB, mb: MB, gb: GB, tb: GB * 1024 }[(m[2] || 'b').toLowerCase()] : null;
+}
+const tokenize = q => q.match(/-?(?:[^\s"]*"[^"]*"[^\s"]*|[^\s"]+)/g) || [];
+
+function compile(q) {
+  const tests = [], words = [];
+  for (let tok of tokenize(q.trim())) {
+    const neg = tok.length > 1 && tok.startsWith('-');
+    if (neg) tok = tok.slice(1);
+    tok = tok.replace(/"/g, '');
+    const m = /^([^:\\*?]+):(.*)$/.exec(tok);
+    const key = m && KEY[fold(m[1])];
+    let t, w;
+    if (key === 'size') {
+      const v = m[2];
+      if (['empty', 'bos'].includes(fold(v))) { t = n => n.size === 0; w = 'boş'; }
+      else if (v.includes('..')) {
+        const [a, b] = v.split('..').map(parseSize);
+        if (a == null || b == null) throw `"${v}" anlaşılmadı. Örnek: size:10mb..500mb`;
+        t = n => n.size >= a && n.size <= b; w = `${fmtSize(a)} ile ${fmtSize(b)} arası`;
+      } else {
+        const op = /^[<>]=?/.exec(v)?.[0] ?? '>=', x = parseSize(v.slice(/^[<>]/.test(v) ? op.length : 0));
+        if (x == null) throw `"${v}" anlaşılmadı. Örnek: size:>1gb`;
+        t = { '>': n => n.size > x, '>=': n => n.size >= x, '<': n => n.size < x, '<=': n => n.size <= x }[op];
+        w = op.startsWith('>') ? `${fmtSize(x)} üstü` : `${fmtSize(x)} altı`;
+      }
+    } else if (key === 'ext') {
+      const set = m[2].split(',').map(e => fold(e.replace(/^\*?\./, '')));
+      t = n => !n.children && set.includes(fold(n.name.split('.').pop())); w = `uzantısı ${set.join(', ')}`;
+    } else if (key === 'type') {
+      const cats = m[2].split(',').map(x => TYPES[fold(x).replace(/\s/g, '')]);
+      if (cats.includes(undefined)) throw `"${m[2]}" bilinen bir tür değil. Örnek: video, görsel, belge, arşiv, kod, oyun`;
+      t = n => !n.children && cats.includes(n.cat); w = cats.map(c => CAT[c][0].toLocaleLowerCase('tr')).join(' ya da ');
+    } else if (key === 'kind') {
+      const dir = ['dir', 'folder', 'klasor'].includes(fold(m[2]));
+      t = n => !!n.children === dir; w = dir ? 'yalnızca klasörler' : 'yalnızca dosyalar';
+    } else if (key === 'in') {
+      // in: matches anywhere in the folder path, so * may cross folders here
+      const g = /[*?]/.test(m[2]) ? m[2] : `*\\${m[2]}\\*`;
+      const re = new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$', 'i');
+      t = n => re.test(pathOf(n.parent) + '\\'); w = `${m[2]} içinde`;
+    } else if (m && LATER.includes(fold(m[1]))) {
+      throw `${m[1]}: uygulamada çalışır. Bu örnek sürücüde tarih ve öznitelik bilgisi yok.`;
+    } else {
+      const res = tok.split(';').filter(Boolean).map(g => [globRe(g), g.includes('\\')]);
+      t = n => res.some(([re, full]) => re.test(full ? pathOf(n) : n.name));
+      w = `adı ${tok.split(';').filter(Boolean).join(' ya da ')}`;
+    }
+    tests.push(neg ? n => !t(n) : t);
+    words.push(neg ? `${w} hariç` : w);
+  }
+  return { test: n => tests.every(f => f(n)), words };
+}
+
+const qEl = document.getElementById('q'), resEl = document.getElementById('results'), expEl = document.getElementById('qexplain');
+const chipsEl = document.getElementById('chips');
+const EXAMPLES = ['type:video size:>1gb', '**\\node_modules', '*.iso;*.vhdx', 'in:Steam size:>5gb', 'type:görsel -*.png', 'kind:dir size:10gb..50gb', 'ext:pak,vpk', 'in:AppData type:sistem'];
+chipsEl.innerHTML = EXAMPLES.map(e => `<button type="button">${esc(e)}</button>`).join('');
+chipsEl.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { qEl.value = b.textContent; run(); } });
+
+function run() {
+  const q = qEl.value;
+  [...chipsEl.children].forEach(b => b.setAttribute('aria-pressed', b.textContent === q));
+  if (!q.trim()) { expEl.textContent = 'Bir sorgu yazın.'; resEl.replaceChildren(); return; }
+  let c;
+  try { c = compile(q); } catch (err) { expEl.innerHTML = `<b>${esc(String(err))}</b>`; resEl.replaceChildren(); return; }
+  const t0 = performance.now();
+  const hits = ALL.filter(c.test).sort((a, b) => b.size - a.size);
+  const ms = performance.now() - t0;
+  // don't double count: a folder hit already contains its file hits
+  const total = hits.filter(n => !hits.includes(n.parent)).reduce((s, n) => s + n.size, 0);
+  expEl.innerHTML = `<b>${nf0.format(hits.length)} sonuç, toplam ${fmtSize(total)}.</b> Aranan: ${esc(c.words.join(', '))}. ${nf0.format(ALL.length)} öğe ${nf1.format(Math.max(ms, .1))} ms'de tarandı.`;
+  resEl.innerHTML = hits.length
+    ? hits.slice(0, 50).map(n => `<li><i style="background:${n.children ? PALETTE[0] : CAT[n.cat][1]}"></i><span class="p" title="${esc(pathOf(n))}"><bdi>${esc(pathOf(n.parent))}\\<em>${esc(n.name)}</em></bdi></span><span class="s">${fmtSize(n.size)}</span></li>`).join('')
+    : '<li class="empty">Bu sorguya uyan bir şey yok.</li>';
+}
+document.getElementById('qform').addEventListener('submit', e => { e.preventDefault(); run(); });
+qEl.addEventListener('input', () => { clearTimeout(run.t); run.t = setTimeout(run, 120); });
+run();
+
+// ---------- copy ----------
+document.getElementById('copy').addEventListener('click', async e => {
+  const b = e.currentTarget;
+  try { await navigator.clipboard.writeText(document.getElementById('cli').innerText); b.textContent = 'Kopyalandı'; }
+  catch { b.textContent = 'Kopyalanamadı'; }
+  setTimeout(() => (b.textContent = 'Kopyala'), 1800);
+});
+</script>
+</body>
+</html>

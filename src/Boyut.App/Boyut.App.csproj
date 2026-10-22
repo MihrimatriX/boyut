@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <RootNamespace>Boyut.App</RootNamespace>
+    <AssemblyName>Boyut</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Boyut.ico</ApplicationIcon>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+
+    <!-- Unpackaged, Windows App SDK bundled with the app: no MSIX, no App Runtime installer.
+         Debug builds use the installed .NET 10 runtime; build.ps1 -Publish bundles .NET as well. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Without this, dotnet publish leaves out Boyut.pri (compiled XAML) and the published exe dies in MainWindow. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+
+    <!-- Program.cs owns Main so the same exe can act as the elevated scan helper. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+
+    <Nullable>enable</Nullable>
+    <!-- MVVMTK0045: field-based [ObservableProperty] warnings do not apply; we use partial properties. -->
+    <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
+  </PropertyGroup>
+
+  <!-- dotnet build without -p:Platform picks AnyCPU; Windows App SDK needs a real architecture. -->
+  <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">
+    <Platform>x64</Platform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' != 'ARM64'">win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Boyut.Core\Boyut.Core.csproj" />
+    <ProjectReference Include="..\Boyut.Platform.Windows\Boyut.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

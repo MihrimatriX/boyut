@@ -1,0 +1,13 @@
+<Project>
+  <ItemGroup>
+    <!-- Core -->
+    <PackageVersion Include="System.IO.Hashing" Version="10.0.13" />
+
+    <!-- App (WinUI 3) -->
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+
+    <!-- Tests -->
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Boyut.App.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:Boyut.App.Services"
+    xmlns:vm="using:Boyut.App.ViewModels"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer>
+        <StackPanel
+            MaxWidth="1240"
+            Padding="{StaticResource PagePadding}"
+            Spacing="24">
+
+            <StackPanel Spacing="4">
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Neyi analiz edelim?" />
+                <TextBlock Style="{StaticResource Secondary}" Text="Bir sürücü ya da klasör seç; Boyut neyin yer kapladığını ağaç, treemap ve dosya türleriyle gösterir." />
+            </StackPanel>
+
+            <InfoBar
+                Title="NTFS sürücülerde hızlı tarama"
+                IsOpen="{x:Bind ViewModel.ShowAdminTip, Mode=TwoWay}"
+                Message="Boyut, NTFS sürücüleri doğrudan MFT üzerinden okur; bu birkaç saniye sürer ama yönetici izni ister. Tarama başlarken Windows izin soracak. Uygulamanın kendisi yönetici olarak çalışmaz, böylece Gezgin'den sürükle-bırak çalışmaya devam eder."
+                Severity="Informational" />
+
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Drop zone -->
+                <Border
+                    x:Name="DropZone"
+                    Padding="32"
+                    AllowDrop="True"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    BorderThickness="1.5"
+                    CornerRadius="8"
+                    DragLeave="OnDragLeave"
+                    DragOver="OnDragOver"
+                    Drop="OnDrop">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="12">
+                        <FontIcon
+                            FontSize="48"
+                            Foreground="{ThemeResource AccentFillColorDefaultBrush}"
+                            Glyph="&#xE8B7;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Text="Klasörü buraya sürükle" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource Secondary}"
+                            Text="ya da seç, yolunu yaz veya bir .boyut tarama dosyası bırak"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button
+                                Command="{x:Bind ViewModel.PickFolderCommand}"
+                                Content="Klasör seç…"
+                                IsEnabled="{x:Bind services:Ui.Not(ViewModel.Session.IsScanning), Mode=OneWay}"
+                                Style="{StaticResource AccentButtonStyle}" />
+                        </StackPanel>
+                        <Grid MaxWidth="460" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="PathBox"
+                                KeyDown="OnPathKeyDown"
+                                PlaceholderText="ör. D:\Projeler"
+                                Text="{x:Bind ViewModel.PathText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                Grid.Column="1"
+                                Command="{x:Bind ViewModel.ScanPathCommand}"
+                                Content="Tara"
+                                IsEnabled="{x:Bind services:Ui.Not(ViewModel.Session.IsScanning), Mode=OneWay}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Scan options -->
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource SectionHeader}" Text="Tarama seçenekleri" />
+                        <ToggleSwitch
+                            Header="Hızlı tarama (NTFS MFT)"
+                            IsOn="{x:Bind ViewModel.UseMft, Mode=TwoWay}"
+                            OffContent="Kapalı — klasör klasör okunur"
+                            OnContent="Açık — yönetici izniyle saniyeler içinde" />
+                        <ToggleSwitch
+                            Header="Gizli ve sistem dosyaları"
+                            IsOn="{x:Bind ViewModel.IncludeHidden, Mode=TwoWay}"
+                            OffContent="Hariç"
+                            OnContent="Dahil (pagefile.sys, $Recycle.Bin …)" />
+                        <ToggleSwitch
+                            Header="Bağlantıları (junction, symlink) izle"
+                            IsOn="{x:Bind ViewModel.FollowLinks, Mode=TwoWay}"
+                            OffContent="Hayır — aynı veri iki kez sayılmaz"
+                            OnContent="Evet" />
+                        <ToggleSwitch
+                            Header="Alternatif veri akışları (ADS)"
+                            IsOn="{x:Bind ViewModel.IncludeStreams, Mode=TwoWay}"
+                            OffContent="Sayılmaz"
+                            OnContent="Dosya boyutuna eklenir (yalnızca MFT)" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Drives -->
+            <StackPanel Spacing="12">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Sürücüler" />
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Drives}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="16"
+                            MinItemWidth="300"
+                            MinRowSpacing="16" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DriveItem">
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon FontSize="28" Glyph="{x:Bind Glyph}" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" />
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind Detail}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ProgressBar
+                                        Height="8"
+                                        Maximum="100"
+                                        Value="{x:Bind UsedPercent}" />
+                                    <Grid>
+                                        <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind UsedText}" />
+                                        <TextBlock
+                                            HorizontalAlignment="Right"
+                                            Style="{StaticResource CardLabel}"
+                                            Text="{x:Bind FreeText}" />
+                                    </Grid>
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind LastScanText}" />
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind EngineHint}" />
+                                        </StackPanel>
+                                        <Button
+                                            Grid.Column="1"
+                                            Command="{x:Bind ScanCommand}"
+                                            Content="Tara"
+                                            Style="{StaticResource AccentButtonStyle}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <!-- Recent scans -->
+            <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.HasRecent, Mode=OneWay}">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Son taramalar" />
+                <Border Padding="4" Style="{StaticResource Card}">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Recent}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecentItem">
+                                <Grid Padding="12,8" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon
+                                        VerticalAlignment="Center"
+                                        Foreground="#E3A82E"
+                                        Glyph="&#xE8B7;" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Path}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Style="{StaticResource CardLabel}">
+                                            <Run Text="{x:Bind When}" /><Run Text=" · " /><Run Text="{x:Bind EngineText}" /><Run Text=" · " /><Run Text="{x:Bind FilesText}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind SizeText}" />
+                                    <Button
+                                        Grid.Column="3"
+                                        Command="{x:Bind ShowChangesCommand}"
+                                        Content="Değişimler"
+                                        ToolTipService.ToolTip="Önceki taramaya göre ne büyüdü, ne silindi"
+                                        Visibility="{x:Bind HasChanges}" />
+                                    <Button
+                                        Grid.Column="4"
+                                        Command="{x:Bind OpenCommand}"
+                                        Content="Sonucu aç" />
+                                    <Button
+                                        Grid.Column="5"
+                                        Command="{x:Bind RescanCommand}"
+                                        Content="Yeniden tara" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

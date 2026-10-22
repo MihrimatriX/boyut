@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Boyut.Cli</RootNamespace>
+    <AssemblyName>boyut</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Boyut.Core\Boyut.Core.csproj" />
+    <ProjectReference Include="..\Boyut.Platform.Windows\Boyut.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>
