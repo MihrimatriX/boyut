@@ -192,26 +192,22 @@
                                     </Grid>
                                     <TextBlock
                                         Grid.Column="1"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        Style="{StaticResource Secondary}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Style="{StaticResource CellNumber}"
                                         Text="{x:Bind OldText}" />
                                     <TextBlock
                                         Grid.Column="2"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
+                                        Style="{StaticResource CellNumber}"
                                         Text="{x:Bind NewText}" />
                                     <TextBlock
                                         Grid.Column="3"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
                                         FontWeight="SemiBold"
                                         Foreground="{x:Bind services:Ui.Brush(DeltaColor)}"
+                                        Style="{StaticResource CellNumber}"
                                         Text="{x:Bind DeltaText}" />
                                     <TextBlock
                                         Grid.Column="4"
-                                        VerticalAlignment="Center"
-                                        Style="{StaticResource CardLabel}"
+                                        Style="{StaticResource CellSecondary}"
                                         Text="{x:Bind KindText}" />
                                 </Grid>
                             </DataTemplate>

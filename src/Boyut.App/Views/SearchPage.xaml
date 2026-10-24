@@ -396,24 +396,25 @@
                                         VerticalAlignment="Center"
                                         Style="{StaticResource CardLabel}"
                                         Text="{x:Bind Folder}"
-                                        TextTrimming="CharacterEllipsis" />
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap"
+                                        ToolTipService.ToolTip="{x:Bind Folder}" />
                                     <TextBlock
                                         Grid.Column="2"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
                                         FontWeight="{x:Bind services:Ui.Weight(IsLarge)}"
+                                        Style="{StaticResource CellNumber}"
                                         Text="{x:Bind SizeText}" />
                                     <TextBlock
                                         Grid.Column="3"
-                                        VerticalAlignment="Center"
-                                        Style="{StaticResource Secondary}"
+                                        Style="{StaticResource CellSecondary}"
                                         Text="{x:Bind ModifiedText}" />
                                     <TextBlock
                                         Grid.Column="4"
-                                        VerticalAlignment="Center"
                                         Style="{StaticResource CardLabel}"
                                         Text="{x:Bind Attributes}"
-                                        TextTrimming="CharacterEllipsis" />
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap"
+                                        VerticalAlignment="Center" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
