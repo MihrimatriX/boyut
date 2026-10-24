@@ -219,7 +219,7 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="132" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto" />
@@ -232,7 +232,7 @@
                                                     Background="{x:Bind services:Ui.Brush(Color)}"
                                                     CornerRadius="3" />
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Name}" />
-                                                <TextBlock Grid.Column="2">
+                                                <TextBlock Grid.Column="2" HorizontalAlignment="Right">
                                                     <Run FontWeight="SemiBold" Text="{x:Bind SizeText}" /><Run Text="  " /><Run Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind PercentText}" />
                                                 </TextBlock>
                                                 <Grid

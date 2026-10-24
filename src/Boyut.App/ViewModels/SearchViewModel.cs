@@ -17,6 +17,8 @@ public sealed partial class SearchViewModel : ObservableObject
     private CancellationTokenSource? pending;
     private SearchResult lastResult = SearchResult.Empty;
     private int scopeNode = FileIndex.RootNode;
+    /// <summary>A query ran and its results are listed (an empty pattern runs nothing: no "no matches" then).</summary>
+    private bool searched;
 
     public static SearchViewModel Current { get; } = new();
 
@@ -90,7 +92,7 @@ public sealed partial class SearchViewModel : ObservableObject
     public string ScopeText => ScopePath is null ? "Tüm tarama" : ScopePath;
     public bool HasSelection => SelectedCount > 0;
     public bool HasResults => Results.Count > 0;
-    public bool ShowEmpty => !IsSearching && Results.Count == 0 && Error is null && Session.HasIndex;
+    public bool ShowEmpty => searched && !IsSearching && Results.Count == 0 && Error is null && Session.HasIndex;
     public string PlaceholderText => ModeIndex switch
     {
         1 => @"^IMG_\d{4}\.(jpg|heic)$   size:>1mb",
@@ -247,6 +249,7 @@ public sealed partial class SearchViewModel : ObservableObject
             if (ct.IsCancellationRequested || !ReferenceEquals(index, Session.Index)) return;
 
             lastResult = result;
+            searched = true;
             Fill();
             Summary = $"{Ui.Count(result.TotalMatches)} sonuç · {Ui.Size(result.TotalBytes)}";
             Detail = $"{Ui.Count(index.Count)} öğe {Core.Formatting.SizeFormatter.FormatDuration(result.Elapsed)} içinde arandı" +
@@ -262,6 +265,7 @@ public sealed partial class SearchViewModel : ObservableObject
     private void Clear(string summary)
     {
         lastResult = SearchResult.Empty;
+        searched = false;
         Results.Clear();
         OnPropertyChanged(nameof(HasResults));
         OnPropertyChanged(nameof(ShowEmpty));

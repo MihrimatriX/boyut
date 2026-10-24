@@ -86,6 +86,8 @@ public sealed partial class TreeViewModel : ObservableObject
     [ObservableProperty] public partial string SelectedAttributes { get; private set; } = "";
     [ObservableProperty] public partial string SelectedParentShare { get; private set; } = "";
     [ObservableProperty] public partial string SelectedDiskShare { get; private set; } = "";
+    /// <summary>Under the size in the details header: share of the parent, or of the disk for the scan root.</summary>
+    [ObservableProperty] public partial string SelectedShareCaption { get; private set; } = "";
     [ObservableProperty] public partial string SelectedGlyph { get; private set; } = Ui.GlyphFolder;
     [ObservableProperty] public partial Color SelectedGlyphColor { get; private set; } = Ui.Hex("#E3A82E");
     [ObservableProperty] public partial bool SelectedIsDirectory { get; private set; }
@@ -431,6 +433,8 @@ public sealed partial class TreeViewModel : ObservableObject
         SelectedParentShare = parent >= 0 && i.Size(parent) > 0 ? Ui.Percent((double)i.EffectiveSize(node) / i.Size(parent)) : "—";
         long? volume = i.Metadata.VolumeTotalBytes;
         SelectedDiskShare = Ui.Percent((double)i.Size(node) / (volume is > 0 ? volume.Value : Math.Max(1, i.TotalSize)));
+        SelectedShareCaption = parent >= 0 ? "üst klasördeki payı " + SelectedParentShare
+            : volume is > 0 ? "diskteki payı " + SelectedDiskShare : "";
         CanGoUp = node != FileIndex.RootNode;
 
         UpdateCrumbs(node);

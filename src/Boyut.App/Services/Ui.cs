@@ -37,6 +37,7 @@ public static class Ui
     public static Visibility Show(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
     public static Visibility Hide(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public static Visibility ShowIf(string? text) => string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+    public static Visibility ShowIf(bool condition, string? text) => condition && !string.IsNullOrEmpty(text) ? Visibility.Visible : Visibility.Collapsed;
     public static Visibility ShowIfAny(int count) => count > 0 ? Visibility.Visible : Visibility.Collapsed;
     public static bool Not(bool value) => !value;
     public static bool HasText(string? text) => !string.IsNullOrEmpty(text);

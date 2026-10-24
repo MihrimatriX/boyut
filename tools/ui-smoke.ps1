@@ -112,10 +112,18 @@ foreach ($page in 'Ana sayfa', 'Değişimler', 'Gelişmiş arama', 'Temizlik ve 
     Shot ('05-' + $page.TrimStart('#'))
 }
 
-# Light theme, then back to the tree
-Activate 'Açık'
+# A query fills the result list
+Activate 'Gelişmiş arama'
+$query = Find 'Arama sorgusu'
+$query.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('*.dll;*.exe size:>20mb')
+Write-Host '› sorgu yazıldı'
+Start-Sleep -Seconds 2
+Shot '05-Gelişmiş arama-sonuçlar'
+
+# The other theme (CI machines run light), then back to the tree
+Activate 'Koyu'
 Activate 'Klasör ağacı'
-Shot '06-agac-acik-tema'
+Shot '06-agac-koyu-tema'
 Activate '#SettingsItem'
 Activate 'Sistem ayarını kullan'
 

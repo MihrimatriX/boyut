@@ -17,44 +17,47 @@
         </Grid.RowDefinitions>
 
         <!-- What to compare -->
-        <Grid ColumnSpacing="12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock
-                Margin="0,0,12,0"
-                VerticalAlignment="Bottom"
-                Style="{StaticResource PageTitle}"
-                Text="Değişimler" />
-            <ComboBox
-                Grid.Column="1"
-                HorizontalAlignment="Stretch"
-                Header="Klasör / sürücü"
-                ItemsSource="{x:Bind ViewModel.Roots}"
-                SelectedItem="{x:Bind ViewModel.SelectedRoot, Mode=TwoWay}" />
-            <ComboBox
-                Grid.Column="2"
-                HorizontalAlignment="Stretch"
-                Header="Önceki tarama"
-                ItemsSource="{x:Bind ViewModel.Snapshots}"
-                SelectedItem="{x:Bind ViewModel.Before, Mode=TwoWay}" />
-            <ComboBox
-                Grid.Column="3"
-                HorizontalAlignment="Stretch"
-                Header="Sonraki tarama"
-                ItemsSource="{x:Bind ViewModel.Snapshots}"
-                SelectedItem="{x:Bind ViewModel.After, Mode=TwoWay}" />
-            <ProgressRing
-                Grid.Column="4"
-                Width="24"
-                Height="24"
-                VerticalAlignment="Bottom"
-                IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-        </Grid>
+        <StackPanel Spacing="12">
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="Değişimler" />
+                <TextBlock
+                    Style="{StaticResource Secondary}"
+                    Text="Aynı klasörün iki taramasını karşılaştırır: ne büyüdü, ne eklendi, ne silindi."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    Header="Klasör / sürücü"
+                    ItemsSource="{x:Bind ViewModel.Roots}"
+                    SelectedItem="{x:Bind ViewModel.SelectedRoot, Mode=TwoWay}" />
+                <ComboBox
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    Header="Önceki tarama"
+                    ItemsSource="{x:Bind ViewModel.Snapshots}"
+                    SelectedItem="{x:Bind ViewModel.Before, Mode=TwoWay}" />
+                <ComboBox
+                    Grid.Column="2"
+                    HorizontalAlignment="Stretch"
+                    Header="Sonraki tarama"
+                    ItemsSource="{x:Bind ViewModel.Snapshots}"
+                    SelectedItem="{x:Bind ViewModel.After, Mode=TwoWay}" />
+                <ProgressRing
+                    Grid.Column="3"
+                    Width="24"
+                    Height="24"
+                    Margin="0,0,0,4"
+                    VerticalAlignment="Bottom"
+                    IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+            </Grid>
+        </StackPanel>
 
         <!-- Summary -->
         <Grid
@@ -106,7 +109,27 @@
                 Style="{StaticResource Secondary}"
                 Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
                 TextWrapping="Wrap"
-                Visibility="{x:Bind services:Ui.ShowIf(ViewModel.StatusText), Mode=OneWay}" />
+                Visibility="{x:Bind services:Ui.ShowIf(ViewModel.HasDiff, ViewModel.StatusText), Mode=OneWay}" />
+        </StackPanel>
+
+        <!-- Nothing to compare yet -->
+        <StackPanel
+            Grid.Row="3"
+            MaxWidth="560"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="12"
+            Visibility="{x:Bind services:Ui.Hide(ViewModel.HasDiff), Mode=OneWay}">
+            <FontIcon
+                FontSize="48"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Glyph="&#xE81C;" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Style="{StaticResource Secondary}"
+                Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
         </StackPanel>
 
         <!-- Diff tree + actions -->
@@ -127,7 +150,7 @@
                     </Grid.RowDefinitions>
                     <controls:GridHeader
                         Height="36"
-                        Padding="24,0,24,0"
+                        Padding="12,0"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1"
                         Columns="{x:Bind ViewModel.Columns}" />

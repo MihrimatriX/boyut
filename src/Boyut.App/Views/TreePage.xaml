@@ -182,7 +182,7 @@
                         </Grid.RowDefinitions>
                         <controls:GridHeader
                             Height="36"
-                            Padding="24,0,24,0"
+                            Padding="12,0"
                             BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                             BorderThickness="0,0,0,1"
                             Columns="{x:Bind ViewModel.Columns}" />
@@ -379,9 +379,10 @@
                                     HorizontalAlignment="Right"
                                     Style="{StaticResource CardValue}"
                                     Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
-                                <TextBlock HorizontalAlignment="Right" Style="{StaticResource CardLabel}">
-                                    <Run Text="üst klasörün " /><Run Text="{x:Bind ViewModel.SelectedParentShare, Mode=OneWay}" />
-                                </TextBlock>
+                                <TextBlock
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource CardLabel}"
+                                    Text="{x:Bind ViewModel.SelectedShareCaption, Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
 
@@ -533,7 +534,7 @@
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="132" />
                                                     </Grid.ColumnDefinitions>
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto" />
@@ -546,7 +547,7 @@
                                                         Background="{x:Bind services:Ui.Brush(Color)}"
                                                         CornerRadius="3" />
                                                     <TextBlock Grid.Column="1" Text="{x:Bind Name}" />
-                                                    <TextBlock Grid.Column="2">
+                                                    <TextBlock Grid.Column="2" HorizontalAlignment="Right">
                                                         <Run FontWeight="SemiBold" Text="{x:Bind SizeText}" /><Run Text="  " /><Run Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind PercentText}" />
                                                     </TextBlock>
                                                     <Grid
