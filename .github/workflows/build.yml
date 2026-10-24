@@ -43,15 +43,3 @@ jobs:
 
       - name: Uygulama (ARM64)
         run: dotnet build src/Boyut.App/Boyut.App.csproj -c Release -p:Platform=ARM64 --nologo
-
-  # TEMPORARY: deletes the screenshot ref used during the design review (manual runs only).
-  cleanup:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: refs/ci/ui-smoke sil
-        run: |
-          git init -q tmp && cd tmp
-          git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" :refs/ci/ui-smoke || true
