@@ -1,6 +1,6 @@
 # Boyut
 
-Windows 11 için klasör ve disk analizi. TreeSize / FolderSize / WizTree sınıfında. NTFS'te MFT'yi doğrudan okuduğu için hızlı, Fluent arayüzüyle modern.
+Windows 11 için klasör ve disk analizi. TreeSize / FolderSize / WizTree sınıfında. NTFS'te MFT'yi doğrudan okuduğu için hızlı, Windows 11 (Fluent 2) arayüzüyle modern.
 
 **[Tanıtım sayfası](https://mihrimatrix.github.io/boyut/)** · **[İndir (Windows x64)](https://github.com/MihrimatriX/boyut/releases/latest/download/Boyut-win-x64.zip)**
 
@@ -38,6 +38,29 @@ dotnet run --project src/Boyut.Cli -- diff C:\                 # geçmişteki so
 dotnet run --project src/Boyut.Cli -- refresh C:\              # değişiklik günlüğüyle güncelle
 ```
 
+## Arayüz
+
+- **Klasör ağacı** (TreeSize düzeni): her satırın adının arkasında, üst klasördeki payı kadar uzanan ve düzeye göre renk değiştiren bir çubuk. Sütunlar: Boyut, Diskte, Pay, Dosya, Klasör (alt klasör sayısı), Değiştirilme. Başlığa tıklayınca sıralar, kenarından sürükleyince genişlik değişir, sağ tıkla sütun gizlenir. Pencere daralınca önemsiz sütunlar kendiliğinden çekilir.
+- **Genişlet**: ağacı 1–4 düzeye kadar tek seferde açar (her klasörde en büyük 50 öğe, toplam 3.000 satır sınırıyla), **Tümünü daralt** kapatır.
+- **Ayrıntı bölmesi** (sağda, sürüklenebilir bölücüyle; genişlik ve açık sekme hatırlanır). Seçili klasörü, dosya seçiliyse onun klasörünü anlatır:
+  - *Harita*: iki düzeyli treemap; büyük klasörler kendi içeriğini de gösterir, seçili dosya çerçevelenir.
+  - *İçerik*: alt öğelerin çubuk grafiği; tıklayınca o klasöre girer.
+  - *Türler*: alt ağaçtaki dosya türleri ve en çok yer kaplayan 40 uzantı.
+  - *Dosyalar*: alt ağaçtaki en büyük 100 dosya.
+  - *Bilgi*: boyut, diskte kapladığı, dosya ve alt klasör sayısı, paylar, öznitelikler ve işlemler.
+- **Durum çubuğu**: taranan kök, toplam, dosya ve klasör sayısı, tarama motoru ve süresi, sürücüdeki boş alan (doluluk %80'i geçince turuncu, %90'ı geçince kırmızı).
+
+| Kısayol | İşlev |
+|---|---|
+| Ctrl+O | Klasör seç ve tara |
+| Ctrl+F | Bu taramada ara |
+| F5 | Değişiklik günlüğüyle güncelle |
+| Alt+↑ / Geri | Üst klasör |
+| → / ← | Klasörü aç / kapat (kapalıysa üst klasöre çık) |
+| Enter, çift tık | Aç / kapat |
+| Ctrl+C | Seçili öğenin yolunu kopyala |
+| Del | Geri Dönüşüm Kutusu'na taşı |
+
 ## Mimari
 
 ```
@@ -54,6 +77,7 @@ src/
   Boyut.Platform.Windows  Win32: birim okuyucu, MftScanner, Geri Dönüşüm, Gezgin, UAC yardımcısı
   Boyut.Cli               "boyut" komut satırı aracı
   Boyut.App               WinUI 3 arayüzü (Mica, TitleBar, NavigationView, MVVM Toolkit)
+    Controls/             GridColumns (sıralanır/boyutlanır sütunlar), TreemapView, PaneSplitter
 tests/
   Boyut.Core.Tests        xUnit v3. Gerçek bir NTFS imajı (Fixtures/) üzerinde MFT testleri içerir
 ```
@@ -107,6 +131,15 @@ Anahtarların Türkçe karşılıkları da çalışır: `boyut:`, `uzantı:`, `t
 ```powershell
 dotnet test --project tests/Boyut.Core.Tests
 ```
+
+Arayüz duman testi (Windows): uygulamayı başlatır, bir klasörü tarar, bütün sayfaları ve ayrıntı sekmelerini UI Automation ile gezer, her adımın ekran görüntüsünü `ui-smoke\` altına kaydeder. Uygulama kapanır ya da `hata.log` yazarsa başarısız olur.
+
+```powershell
+./build.ps1 -Configuration Release
+powershell -File tools/ui-smoke.ps1 -Exe (Get-ChildItem src/Boyut.App/bin/x64/Release -Recurse -Filter Boyut.exe)[0].FullName
+```
+
+GitHub Actions (`.github/workflows/build.yml`) her gönderimde testleri, CLI'ı, x64 ve ARM64 uygulamayı derler ve duman testini çalıştırır.
 
 `Fixtures/ntfs-sample.img.gz` gerçek bir NTFS imajıdır. İçinde hard link, ADS, seyrek dosya, Türkçe adlar, 3000 dosyalık bir klasör ve silinmiş bir kayıt bulunur. İmajı yeniden üretmek için `make-ntfs.sh` betiği kullanılır (Linux, ntfs-3g).
 
