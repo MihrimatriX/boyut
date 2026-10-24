@@ -25,5 +25,21 @@ jobs:
       - name: Uygulama (x64)
         run: dotnet build src/Boyut.App/Boyut.App.csproj -c Release -p:Platform=x64 --nologo
 
+      # Starts the real app, scans a folder and walks every page with UI Automation: catches XAML that compiles
+      # but fails at runtime (missing resources, bad styles, crashes on navigation). Screenshots are kept as an artifact.
+      - name: Arayüz duman testi
+        shell: powershell
+        run: |
+          $exe = Get-ChildItem src/Boyut.App/bin/x64/Release -Recurse -Filter Boyut.exe | Select-Object -First 1
+          ./tools/ui-smoke.ps1 -Exe $exe.FullName -Out ui-smoke
+
+      - name: Ekran görüntüleri
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke
+          path: ui-smoke
+          if-no-files-found: ignore
+
       - name: Uygulama (ARM64)
         run: dotnet build src/Boyut.App/Boyut.App.csproj -c Release -p:Platform=ARM64 --nologo
