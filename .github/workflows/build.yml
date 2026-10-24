@@ -9,8 +9,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: write # TEMPORARY: screenshot ref above
     steps:
       - uses: actions/checkout@v5
 
@@ -43,16 +41,17 @@ jobs:
           path: ui-smoke
           if-no-files-found: ignore
 
-      # TEMPORARY (design review): hidden ref with the screenshots, only on manual runs.
-      - name: Ekran görüntülerini refs/ci/ui-smoke'a it
-        if: always() && github.event_name == 'workflow_dispatch'
-        shell: bash
-        run: |
-          cd ui-smoke
-          git init -q
-          git add .
-          git -c user.name=ci -c user.email=ci@localhost commit -qm "ui-smoke ${GITHUB_SHA}"
-          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/ci/ui-smoke
-
       - name: Uygulama (ARM64)
         run: dotnet build src/Boyut.App/Boyut.App.csproj -c Release -p:Platform=ARM64 --nologo
+
+  # TEMPORARY: deletes the screenshot ref used during the design review (manual runs only).
+  cleanup:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: refs/ci/ui-smoke sil
+        run: |
+          git init -q tmp && cd tmp
+          git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" :refs/ci/ui-smoke || true
