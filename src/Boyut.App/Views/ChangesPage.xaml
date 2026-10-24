@@ -3,6 +3,7 @@
     x:Class="Boyut.App.Views.ChangesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Boyut.App.Controls"
     xmlns:services="using:Boyut.App.Services"
     xmlns:vm="using:Boyut.App.ViewModels"
     NavigationCacheMode="Required">
@@ -131,25 +132,12 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Grid
+                    <controls:GridHeader
                         Height="40"
                         Padding="24,0,24,0"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1"
-                        ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="110" />
-                            <ColumnDefinition Width="70" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource ColumnHeader}" Text="Ad" />
-                        <TextBlock Grid.Column="1" HorizontalAlignment="Right" Style="{StaticResource ColumnHeader}" Text="Önce" />
-                        <TextBlock Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource ColumnHeader}" Text="Sonra" />
-                        <TextBlock Grid.Column="3" HorizontalAlignment="Right" Style="{StaticResource ColumnHeader}" Text="Fark ↓" />
-                        <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeader}" Text="Durum" />
-                    </Grid>
+                        Columns="{x:Bind ViewModel.Columns}" />
 
                     <ListView
                         x:Name="DiffList"
@@ -163,14 +151,7 @@
                         SelectionMode="Single">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:DiffRow">
-                                <Grid ColumnSpacing="12" Opacity="{x:Bind Opacity}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="100" />
-                                        <ColumnDefinition Width="100" />
-                                        <ColumnDefinition Width="110" />
-                                        <ColumnDefinition Width="70" />
-                                    </Grid.ColumnDefinitions>
+                                <Grid controls:Columns.Layout="{x:Bind vm:ChangesViewModel.Current.Columns}" Opacity="{x:Bind Opacity}">
                                     <StackPanel
                                         Margin="{x:Bind services:Ui.Indent(Depth)}"
                                         Orientation="Horizontal"

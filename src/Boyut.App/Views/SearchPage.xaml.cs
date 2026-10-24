@@ -40,11 +40,6 @@ public sealed partial class SearchPage : Page, IRefreshable
 
     private void OnResultSelectionChanged(object sender, SelectionChangedEventArgs e) => ViewModel.UpdateSelection(Selected());
 
-    private void OnSortClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { Tag: string key }) ViewModel.SortBy(key);
-    }
-
     private void OnSavedClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is not SavedSearchItem item) return;

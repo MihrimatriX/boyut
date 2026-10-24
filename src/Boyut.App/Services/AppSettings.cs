@@ -13,6 +13,15 @@ public sealed class SavedSearch
     public string Mode { get; set; } = "Glob";
 }
 
+/// <summary>What the user changed on a list's columns; anything missing falls back to the defaults.</summary>
+public sealed class GridLayout
+{
+    public Dictionary<string, double> Widths { get; set; } = [];
+    public List<string> Hidden { get; set; } = [];
+    public string? SortKey { get; set; }
+    public bool SortDescending { get; set; }
+}
+
 public sealed class AppSettings
 {
     public AppTheme Theme { get; set; } = AppTheme.System;
@@ -30,6 +39,8 @@ public sealed class AppSettings
     public int MonitorFreeGb { get; set; } = 20;
     public int MonitorGrowthGb { get; set; } = 5;
     public List<SavedSearch> SavedSearches { get; set; } = [];
+    /// <summary>Per list ("tree", "search", "changes").</summary>
+    public Dictionary<string, GridLayout> Grids { get; set; } = [];
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]

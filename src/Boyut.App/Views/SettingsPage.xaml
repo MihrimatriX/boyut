@@ -10,7 +10,7 @@
             Padding="{StaticResource PagePadding}"
             HorizontalAlignment="Left"
             Spacing="16">
-            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Ayarlar" />
+            <TextBlock Style="{StaticResource PageTitle}" Text="Ayarlar" />
 
             <Border Style="{StaticResource Card}">
                 <StackPanel Spacing="8">

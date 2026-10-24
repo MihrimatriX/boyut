@@ -70,6 +70,15 @@ public static class Ui
         _ => Hex("#C9CED3"),
     };
 
+    public static SolidColorBrush UsageBrush(double usedPercent) => new(UsageColor(usedPercent));
+
+    /// <summary>How full a disk is, at a glance: drive cards and the tree's free-space bar.</summary>
+    public static Color UsageColor(double usedPercent)
+    {
+        // TODO(human): pick the bar colour from how full the disk is (0–100).
+        return Hex("#7C5CFF");
+    }
+
     public static Color SafetyColor(CleanupSafety safety) => safety switch
     {
         CleanupSafety.Safe => Hex("#2E9E5B"),

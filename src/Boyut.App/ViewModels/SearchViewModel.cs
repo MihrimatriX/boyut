@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Boyut.App.Controls;
 using Boyut.App.Services;
 using Boyut.Core.Analysis;
 using Boyut.Core.Model;
@@ -22,6 +23,7 @@ public sealed partial class SearchViewModel : ObservableObject
     private SearchViewModel()
     {
         foreach (var s in SettingsStore.Current.SavedSearches) SavedSearches.Add(new SavedSearchItem(s));
+        Columns.SortChanged += (_, _) => Fill();
         Session.IndexChanged += (_, _) =>
         {
             // Rows hold node numbers of the old index; never let them be acted on.
@@ -77,8 +79,12 @@ public sealed partial class SearchViewModel : ObservableObject
     [ObservableProperty] public partial string SelectionText { get; private set; } = "";
     [ObservableProperty] public partial int SelectedCount { get; private set; }
 
-    [ObservableProperty] public partial string SortKey { get; private set; } = "size";
-    [ObservableProperty] public partial bool SortDescending { get; private set; } = true;
+    public GridColumns Columns { get; } = new("search", "size", true,
+        new GridColumn("name", "Ad") { MinWidth = 160 },
+        new GridColumn("folder", "Konum", 320) { MinWidth = 100, Priority = 3 },
+        new GridColumn("size", "Boyut", 90) { AlignRight = true, DescendingFirst = true, Priority = 4 },
+        new GridColumn("modified", "Değiştirilme", 96) { DescendingFirst = true, Priority = 2 },
+        new GridColumn("attributes", "Öznitelik", 120) { Sortable = false, Priority = 1 });
 
     public bool HasScope => ScopePath is not null;
     public string ScopeText => ScopePath is null ? "Tüm tarama" : ScopePath;
@@ -182,13 +188,6 @@ public sealed partial class SearchViewModel : ObservableObject
         SavedSearches.Remove(item);
     }
 
-    public void SortBy(string key)
-    {
-        if (SortKey == key) SortDescending = !SortDescending;
-        else { SortKey = key; SortDescending = key is "size" or "modified"; }
-        Fill();
-    }
-
     public void UpdateSelection(IReadOnlyList<ResultRow> selected)
     {
         SelectedCount = selected.Count;
@@ -277,7 +276,7 @@ public sealed partial class SearchViewModel : ObservableObject
         if (Session.Index is { } index)
         {
             IEnumerable<int> nodes = lastResult.Nodes;
-            nodes = (SortKey, SortDescending) switch
+            nodes = (Columns.SortKey, Columns.SortDescending) switch
             {
                 ("name", false) => nodes.OrderBy(index.GetName, StringComparer.CurrentCultureIgnoreCase),
                 ("name", true) => nodes.OrderByDescending(index.GetName, StringComparer.CurrentCultureIgnoreCase),

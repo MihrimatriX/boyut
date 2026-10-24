@@ -14,7 +14,10 @@
             Spacing="24">
 
             <StackPanel Spacing="4">
-                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Neyi analiz edelim?" />
+                <TextBlock
+                    FontSize="40"
+                    Style="{StaticResource PageTitle}"
+                    Text="Neyi analiz edelim?" />
                 <TextBlock Style="{StaticResource Secondary}" Text="Bir sürücü ya da klasör seç; Boyut neyin yer kapladığını ağaç, treemap ve dosya türleriyle gösterir." />
             </StackPanel>
 
@@ -35,10 +38,10 @@
                     x:Name="DropZone"
                     Padding="32"
                     AllowDrop="True"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    Background="{ThemeResource GlassFill}"
+                    BorderBrush="{ThemeResource BrandGradient}"
                     BorderThickness="1.5"
-                    CornerRadius="8"
+                    CornerRadius="16"
                     DragLeave="OnDragLeave"
                     DragOver="OnDragOver"
                     Drop="OnDrop">
@@ -46,10 +49,19 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Spacing="12">
-                        <FontIcon
-                            FontSize="48"
-                            Foreground="{ThemeResource AccentFillColorDefaultBrush}"
-                            Glyph="&#xE8B7;" />
+                        <Border
+                            Width="88"
+                            Height="88"
+                            HorizontalAlignment="Center"
+                            Background="{ThemeResource BadgeFill}"
+                            BorderBrush="{ThemeResource BrandGradient}"
+                            BorderThickness="1"
+                            CornerRadius="44">
+                            <FontIcon
+                                FontSize="40"
+                                Foreground="{ThemeResource BrandGradient}"
+                                Glyph="&#xE8B7;" />
+                        </Border>
                         <TextBlock
                             HorizontalAlignment="Center"
                             Style="{StaticResource SubtitleTextBlockStyle}"
@@ -137,7 +149,12 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <FontIcon FontSize="28" Glyph="{x:Bind Glyph}" />
+                                        <Border Width="44" Height="44" Style="{StaticResource IconBadge}">
+                                            <FontIcon
+                                                FontSize="22"
+                                                Foreground="{ThemeResource BrandGradient}"
+                                                Glyph="{x:Bind Glyph}" />
+                                        </Border>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" />
                                             <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind Detail}" />
@@ -145,6 +162,7 @@
                                     </Grid>
                                     <ProgressBar
                                         Height="8"
+                                        Foreground="{x:Bind services:Ui.UsageBrush(UsedPercent)}"
                                         Maximum="100"
                                         Value="{x:Bind UsedPercent}" />
                                     <Grid>

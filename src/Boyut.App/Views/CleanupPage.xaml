@@ -26,7 +26,7 @@
         <ScrollViewer Visibility="{x:Bind ViewModel.Session.HasIndex, Mode=OneWay}">
             <StackPanel Padding="{StaticResource PagePadding}" Spacing="16">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Temizlik ve türler" />
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Temizlik ve türler" />
                     <TextBlock Style="{StaticResource Secondary}">
                         <Run Text="Bilinen klasörler ve dosyalar tanındı: " /><Run Text="{x:Bind ViewModel.Session.RootLabel, Mode=OneWay}" />
                     </TextBlock>

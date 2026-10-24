@@ -3,6 +3,7 @@
     x:Class="Boyut.App.Views.SearchPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Boyut.App.Controls"
     xmlns:services="using:Boyut.App.Services"
     xmlns:vm="using:Boyut.App.ViewModels"
     NavigationCacheMode="Required">
@@ -13,14 +14,28 @@
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
-        <Style x:Key="HeaderButton" TargetType="HyperlinkButton">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
-        </Style>
     </Page.Resources>
 
     <Grid Padding="{StaticResource PagePadding}" RowSpacing="16">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1100" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SideColumn.Width" Value="0" />
+                        <Setter Target="SidePanel.Visibility" Value="Collapsed" />
+                        <Setter Target="Body.ColumnSpacing" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -33,7 +48,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Gelişmiş arama" />
+                <TextBlock Style="{StaticResource PageTitle}" Text="Gelişmiş arama" />
                 <TextBlock Style="{StaticResource Secondary}" Text="Joker karakter, regex ya da sorgu diliyle tarama indeksinde ara; sonuçları toplu yönet." />
             </StackPanel>
             <StackPanel
@@ -154,14 +169,17 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="2" ColumnSpacing="16">
+        <Grid
+            x:Name="Body"
+            Grid.Row="2"
+            ColumnSpacing="16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" />
+                <ColumnDefinition x:Name="SideColumn" Width="280" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Saved searches + syntax -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <!-- Saved searches + syntax (hidden when the window is narrow) -->
+            <ScrollViewer x:Name="SidePanel" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="16">
                     <Border Padding="4,12,4,4" Style="{StaticResource Card}">
                         <StackPanel>
@@ -301,49 +319,13 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid
+                    <controls:GridHeader
                         Grid.Row="1"
                         Height="36"
                         Padding="24,0"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1"
-                        ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.2*" />
-                            <ColumnDefinition Width="1.4*" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="96" />
-                            <ColumnDefinition Width="120" />
-                        </Grid.ColumnDefinitions>
-                        <HyperlinkButton
-                            Click="OnSortClick"
-                            Content="Ad"
-                            Style="{StaticResource HeaderButton}"
-                            Tag="name" />
-                        <HyperlinkButton
-                            Grid.Column="1"
-                            Click="OnSortClick"
-                            Content="Konum"
-                            Style="{StaticResource HeaderButton}"
-                            Tag="folder" />
-                        <HyperlinkButton
-                            Grid.Column="2"
-                            HorizontalAlignment="Right"
-                            Click="OnSortClick"
-                            Content="Boyut"
-                            Style="{StaticResource HeaderButton}"
-                            Tag="size" />
-                        <HyperlinkButton
-                            Grid.Column="3"
-                            Click="OnSortClick"
-                            Content="Değiştirilme"
-                            Style="{StaticResource HeaderButton}"
-                            Tag="modified" />
-                        <TextBlock
-                            Grid.Column="4"
-                            Style="{StaticResource ColumnHeader}"
-                            Text="Öznitelik" />
-                    </Grid>
+                        Columns="{x:Bind ViewModel.Columns}" />
 
                     <ListView
                         x:Name="ResultList"
@@ -357,14 +339,7 @@
                         SelectionMode="Extended">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:ResultRow">
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.2*" />
-                                        <ColumnDefinition Width="1.4*" />
-                                        <ColumnDefinition Width="90" />
-                                        <ColumnDefinition Width="96" />
-                                        <ColumnDefinition Width="120" />
-                                    </Grid.ColumnDefinitions>
+                                <Grid controls:Columns.Layout="{x:Bind vm:SearchViewModel.Current.Columns}">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <FontIcon
                                             FontSize="16"

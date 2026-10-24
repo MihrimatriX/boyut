@@ -21,6 +21,10 @@
             <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnOpenFolder" />
         </Grid.KeyboardAccelerators>
 
+        <!-- Soft brand glow behind the glass cards -->
+        <Rectangle Grid.RowSpan="2" Fill="{ThemeResource GlowA}" IsHitTestVisible="False" />
+        <Rectangle Grid.RowSpan="2" Fill="{ThemeResource GlowB}" IsHitTestVisible="False" />
+
         <TitleBar
             x:Name="AppTitleBar"
             Title="Boyut"

@@ -17,6 +17,30 @@
     </Page.Resources>
 
     <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1280" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SideColumn.Width" Value="0" />
+                        <Setter Target="SideColumn.MinWidth" Value="0" />
+                        <Setter Target="Body.ColumnSpacing" Value="0" />
+                        <Setter Target="Body.RowSpacing" Value="12" />
+                        <Setter Target="SidePanel.(Grid.Row)" Value="1" />
+                        <Setter Target="SidePanel.(Grid.Column)" Value="0" />
+                        <Setter Target="SidePanel.MaxHeight" Value="380" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <!-- Empty state -->
         <StackPanel
             HorizontalAlignment="Center"
@@ -134,33 +158,61 @@
                     <ColumnDefinition Width="1.3*" />
                 </Grid.ColumnDefinitions>
                 <Border Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource CardLabel}" Text="Taranan toplam" />
-                        <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind ViewModel.AllocatedText, Mode=OneWay}" />
-                    </StackPanel>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardLabel}" Text="Taranan toplam" />
+                            <TextBlock Style="{StaticResource HeroValue}" Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind ViewModel.AllocatedText, Mode=OneWay}" />
+                        </StackPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
+                            <FontIcon FontSize="16" Foreground="#A08BFF" Glyph="&#xE9D2;" />
+                        </Border>
+                    </Grid>
                 </Border>
                 <Border Grid.Column="1" Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource CardLabel}" Text="Dosya sayısı" />
-                        <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.FilesText, Mode=OneWay}" />
-                        <TextBlock
-                            Style="{StaticResource CardLabel}"
-                            Text="{x:Bind ViewModel.EngineText, Mode=OneWay}"
-                            TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardLabel}" Text="Dosya sayısı" />
+                            <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.FilesText, Mode=OneWay}" />
+                            <TextBlock
+                                Style="{StaticResource CardLabel}"
+                                Text="{x:Bind ViewModel.EngineText, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
+                            <FontIcon FontSize="16" Foreground="#3ED8F0" Glyph="&#xE8A5;" />
+                        </Border>
+                    </Grid>
                 </Border>
                 <Border Grid.Column="2" Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock
-                            Style="{StaticResource CardLabel}"
-                            Text="{x:Bind ViewModel.SelectedName, Mode=OneWay}"
-                            TextTrimming="CharacterEllipsis" />
-                        <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource CardLabel}">
-                            <Run Text="Disk kapasitesinin " /><Run Text="{x:Bind ViewModel.SelectedShare, Mode=OneWay}" />
-                        </TextBlock>
-                    </StackPanel>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock
+                                Style="{StaticResource CardLabel}"
+                                Text="{x:Bind ViewModel.SelectedName, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource CardLabel}">
+                                <Run Text="Disk kapasitesinin " /><Run Text="{x:Bind ViewModel.SelectedShare, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
+                            <FontIcon FontSize="16" Foreground="#F3B37C" Glyph="&#xE8B7;" />
+                        </Border>
+                    </Grid>
                 </Border>
                 <Border Grid.Column="3" Style="{StaticResource Card}">
                     <StackPanel Spacing="4">
@@ -174,6 +226,7 @@
                         <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.FreeText, Mode=OneWay}" />
                         <ProgressBar
                             Height="6"
+                            Foreground="{x:Bind services:Ui.UsageBrush(ViewModel.UsedPercent), Mode=OneWay}"
                             Maximum="100"
                             Value="{x:Bind ViewModel.UsedPercent, Mode=OneWay}"
                             Visibility="{x:Bind ViewModel.HasVolumeInfo, Mode=OneWay}" />
@@ -181,12 +234,19 @@
                 </Border>
             </Grid>
 
-            <!-- Tree + side panel -->
-            <Grid Grid.Row="2" ColumnSpacing="12">
+            <!-- Tree + side panel (below the tree when the window is narrow) -->
+            <Grid
+                x:Name="Body"
+                Grid.Row="2"
+                ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" MinWidth="560" />
-                    <ColumnDefinition Width="2*" MinWidth="360" />
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition x:Name="SideColumn" Width="2*" MinWidth="360" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
                 <Border Padding="0" Style="{StaticResource Card}">
                     <Grid>
@@ -194,39 +254,12 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Grid
+                        <controls:GridHeader
                             Height="40"
                             Padding="24,0,24,0"
                             BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                             BorderThickness="0,0,0,1"
-                            ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="90" />
-                                <ColumnDefinition Width="170" />
-                                <ColumnDefinition Width="80" />
-                                <ColumnDefinition Width="90" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource ColumnHeader}" Text="Ad" />
-                            <TextBlock
-                                Grid.Column="1"
-                                HorizontalAlignment="Right"
-                                Style="{StaticResource ColumnHeader}"
-                                Text="Boyut ↓" />
-                            <TextBlock
-                                Grid.Column="2"
-                                Style="{StaticResource ColumnHeader}"
-                                Text="Üst klasördeki payı" />
-                            <TextBlock
-                                Grid.Column="3"
-                                HorizontalAlignment="Right"
-                                Style="{StaticResource ColumnHeader}"
-                                Text="Dosya" />
-                            <TextBlock
-                                Grid.Column="4"
-                                Style="{StaticResource ColumnHeader}"
-                                Text="Değiştirilme" />
-                        </Grid>
+                            Columns="{x:Bind ViewModel.Columns}" />
 
                         <ListView
                             x:Name="TreeList"
@@ -240,7 +273,7 @@
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:TreeRow">
-                                    <Grid ColumnSpacing="12" Opacity="{x:Bind Opacity}">
+                                    <Grid controls:Columns.Layout="{x:Bind vm:TreeViewModel.Current.Columns}" Opacity="{x:Bind Opacity}">
                                         <Grid.ContextFlyout>
                                             <MenuFlyout Opening="OnRowMenuOpening">
                                                 <MenuFlyoutItem Click="OnRevealClick" Text="Gezgin'de göster">
@@ -268,13 +301,6 @@
                                                 </MenuFlyoutItem>
                                             </MenuFlyout>
                                         </Grid.ContextFlyout>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="90" />
-                                            <ColumnDefinition Width="170" />
-                                            <ColumnDefinition Width="80" />
-                                            <ColumnDefinition Width="90" />
-                                        </Grid.ColumnDefinitions>
 
                                         <StackPanel
                                             Margin="{x:Bind services:Ui.Indent(Depth)}"
@@ -338,7 +364,10 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer
+                    x:Name="SidePanel"
+                    Grid.Column="1"
+                    VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12">
                         <!-- Contents of the selected folder -->
                         <Border Style="{StaticResource Card}">

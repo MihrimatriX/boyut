@@ -15,16 +15,26 @@ public sealed partial class TreeViewModel : ObservableObject
     private const int PageSize = 400;
     private const int MaxTiles = 60;
     private FileIndex? index;
+    /// <summary>Children per folder in the header's sort order; empty while sorting largest first (the index's own order).</summary>
+    private readonly Dictionary<int, int[]> sortedChildren = [];
 
     public static TreeViewModel Current { get; } = new();
 
     private TreeViewModel()
     {
         Session.IndexChanged += (_, _) => Load(Session.Index);
+        Columns.SortChanged += (_, _) => Load(index); // rebuilds rows, keeps what was open and selected
         Load(Session.Index);
     }
 
     public ScanSession Session => ScanSession.Current;
+
+    public GridColumns Columns { get; } = new("tree", "size", true,
+        new GridColumn("name", "Ad") { MinWidth = 200 },
+        new GridColumn("size", "Boyut", 90) { AlignRight = true, DescendingFirst = true, Priority = 4 },
+        new GridColumn("share", "Üst klasördeki payı", 170) { Sortable = false, Priority = 2 },
+        new GridColumn("files", "Dosya", 80) { AlignRight = true, DescendingFirst = true, Priority = 1 },
+        new GridColumn("modified", "Değiştirilme", 90) { DescendingFirst = true, Priority = 3 });
 
     public ObservableCollection<TreeRow> Rows { get; } = [];
     public ObservableCollection<Crumb> Crumbs { get; } = [];
@@ -86,6 +96,7 @@ public sealed partial class TreeViewModel : ObservableObject
         string? selected = index is not null && SelectedNode >= 0 && SelectedNode < index.Count ? index.GetFullPath(SelectedNode) : null;
 
         index = newIndex;
+        sortedChildren.Clear();
         Rows.Clear();
         OnPropertyChanged(nameof(HasIndex));
         if (index is null) return;
@@ -182,7 +193,7 @@ public sealed partial class TreeViewModel : ObservableObject
     {
         int remaining = index!.ChildCount(parent) - offset;
         long rest = 0;
-        var kids = index.Children(parent);
+        var kids = Kids(parent);
         for (int k = offset; k < kids.Length; k++) rest += index.EffectiveSize(kids[k]);
         return new TreeRow(this)
         {
@@ -231,9 +242,28 @@ public sealed partial class TreeViewModel : ObservableObject
         InsertChildren(more.Node, more.MoreOffset, more.Depth, pos);
     }
 
+    private ReadOnlySpan<int> Kids(int parent)
+    {
+        var i = index!;
+        if (Columns.SortKey == "size" && Columns.SortDescending) return i.Children(parent);
+        if (sortedChildren.TryGetValue(parent, out var cached)) return cached;
+
+        var kids = i.Children(parent).ToArray();
+        Comparison<int> compare = Columns.SortKey switch
+        {
+            "name" => (a, b) => i.NameSpan(a).CompareTo(i.NameSpan(b), StringComparison.CurrentCultureIgnoreCase),
+            "files" => (a, b) => i.FileCount(a).CompareTo(i.FileCount(b)),
+            "modified" => (a, b) => i.ModifiedTicks(a).CompareTo(i.ModifiedTicks(b)),
+            _ => (a, b) => i.Size(a).CompareTo(i.Size(b)),
+        };
+        Comparison<int> order = Columns.SortDescending ? (a, b) => compare(b, a) : compare;
+        Array.Sort(kids, order);
+        return sortedChildren[parent] = kids;
+    }
+
     private int InsertChildren(int parent, int offset, int depth, int at)
     {
-        var kids = index!.Children(parent);
+        var kids = Kids(parent);
         int end = Math.Min(kids.Length, offset + PageSize);
         for (int k = offset; k < end; k++) Rows.Insert(at++, CreateRow(kids[k], depth));
         if (end < kids.Length) Rows.Insert(at++, CreateMoreRow(parent, end, depth));

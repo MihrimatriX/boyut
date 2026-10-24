@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Boyut.App.Controls;
 using Boyut.App.Services;
 using Boyut.Core.Analysis;
 using Boyut.Core.Model;
@@ -20,9 +21,20 @@ public sealed partial class ChangesViewModel : ObservableObject
 
     public static ChangesViewModel Current { get; } = new();
 
-    private ChangesViewModel() => Session.RecentChanged += (_, _) => Refresh();
+    private ChangesViewModel()
+    {
+        Session.RecentChanged += (_, _) => Refresh();
+        Columns.SortChanged += (_, _) => Resort();
+    }
 
     public ScanSession Session => ScanSession.Current;
+
+    public GridColumns Columns { get; } = new("changes", "delta", true,
+        new GridColumn("name", "Ad") { MinWidth = 200 },
+        new GridColumn("old", "Önce", 100) { AlignRight = true, DescendingFirst = true, Priority = 1 },
+        new GridColumn("new", "Sonra", 100) { AlignRight = true, DescendingFirst = true, Priority = 2 },
+        new GridColumn("delta", "Fark", 110) { AlignRight = true, DescendingFirst = true, Priority = 4 },
+        new GridColumn("kind", "Durum", 70) { Priority = 3 });
 
     public ObservableCollection<string> Roots { get; } = [];
     public ObservableCollection<SnapshotChoice> Snapshots { get; } = [];
@@ -210,7 +222,7 @@ public sealed partial class ChangesViewModel : ObservableObject
         int pos = Rows.IndexOf(row);
         if (pos < 0) return;
         row.IsExpanded = true;
-        var kids = diff.Children(row.Entry);
+        var kids = Sorted(diff.Children(row.Entry));
         int at = pos + 1;
         foreach (var k in kids.Take(MaxChildren)) Rows.Insert(at++, CreateRow(k, row.Depth + 1));
         if (kids.Count > MaxChildren)
@@ -228,6 +240,39 @@ public sealed partial class ChangesViewModel : ObservableObject
             });
         }
         if (kids.Count == 0) row.MarkEmpty();
+    }
+
+    private List<DiffEntry> Sorted(List<DiffEntry> kids)
+    {
+        var d = diff!;
+        Comparison<DiffEntry>? compare = Columns.SortKey switch
+        {
+            "name" => (a, b) => string.Compare(d.Name(a), d.Name(b), StringComparison.CurrentCultureIgnoreCase),
+            "old" => (a, b) => d.OldSize(a).CompareTo(d.OldSize(b)),
+            "new" => (a, b) => d.NewSize(a).CompareTo(d.NewSize(b)),
+            "kind" => (a, b) => d.Kind(a).CompareTo(d.Kind(b)),
+            _ => null, // "delta": Children() already lists the largest change (either direction) first
+        };
+        if (compare is null) { if (!Columns.SortDescending) kids.Reverse(); }
+        else
+        {
+            Comparison<DiffEntry> order = Columns.SortDescending ? (a, b) => compare(b, a) : compare;
+            kids.Sort(order);
+        }
+        return kids;
+    }
+
+    /// <summary>Rebuilds the rows in the new order, reopening what was open.</summary>
+    private void Resort()
+    {
+        if (diff is null || Rows.Count == 0) return;
+        var open = Rows.Where(r => r.IsExpanded && !r.IsMore).Select(r => r.Entry).ToHashSet();
+        var selected = SelectedRow is { IsMore: false } s ? s.Entry : (DiffEntry?)null;
+        Rows.Clear();
+        Rows.Add(CreateRow(SnapshotDiff.Root, 0));
+        for (int k = 0; k < Rows.Count; k++) // Expand inserts right after k, so children are visited too
+            if (!Rows[k].IsMore && open.Contains(Rows[k].Entry)) Expand(Rows[k]);
+        SelectedRow = Rows.FirstOrDefault(r => !r.IsMore && r.Entry == selected);
     }
 
     public void Collapse(DiffRow row)

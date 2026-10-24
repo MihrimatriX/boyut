@@ -60,7 +60,7 @@ public sealed partial class TreemapView : Grid
             {
                 Width = Math.Max(0, r.Width - 2),
                 Height = Math.Max(0, r.Height - 2),
-                Background = new SolidColorBrush(item.Color),
+                Background = Cushion(item.Color),
                 CornerRadius = new CornerRadius(Math.Min(6, Math.Min(r.Width, r.Height) / 4)),
                 BorderBrush = item.IsSelected ? selectedStroke : null,
                 BorderThickness = new Thickness(item.IsSelected ? 2 : 0),
@@ -97,4 +97,16 @@ public sealed partial class TreemapView : Grid
             canvas.Children.Add(tile);
         }
     }
+
+    /// <summary>Top-lit gradient, so tiles read as raised glass rather than flat paint.</summary>
+    private static LinearGradientBrush Cushion(Color c) => new()
+    {
+        StartPoint = new(0, 0),
+        EndPoint = new(0, 1),
+        GradientStops =
+        {
+            new GradientStop { Color = c, Offset = 0 },
+            new GradientStop { Color = Color.FromArgb(255, (byte)(c.R * 0.82), (byte)(c.G * 0.82), (byte)(c.B * 0.82)), Offset = 1 },
+        },
+    };
 }
