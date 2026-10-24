@@ -53,6 +53,7 @@ public sealed partial class MainWindow : Window
 
     private void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        Nav.IsPaneOpen = false; // the open pane overlays the page
         if (args.IsSettingsSelected) { ContentFrame.Navigate(typeof(SettingsPage)); return; }
         if (args.SelectedItem is NavigationViewItem { Tag: string tag }) NavigateTo(tag);
     }
@@ -128,6 +129,8 @@ public sealed partial class MainWindow : Window
     public InfoBarSeverity NoticeSeverity(bool isError) => isError ? InfoBarSeverity.Error : InfoBarSeverity.Informational;
 
     private void OnNoticeClosed(InfoBar sender, InfoBarClosedEventArgs args) => Session.Notice = null;
+
+    private void OnPaneToggleRequested(TitleBar sender, object args) => Nav.IsPaneOpen = !Nav.IsPaneOpen;
 
     private void OnCancelScan(object sender, RoutedEventArgs e) => Session.Cancel();
 

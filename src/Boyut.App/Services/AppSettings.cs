@@ -41,6 +41,13 @@ public sealed class AppSettings
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>Per list ("tree", "search", "changes").</summary>
     public Dictionary<string, GridLayout> Grids { get; set; } = [];
+
+    // Folder tree page: the details pane on the right (treemap, contents, types, largest files, properties).
+    public bool TreeDetailsVisible { get; set; } = true;
+    public double TreeDetailsWidth { get; set; } = DefaultTreeDetailsWidth;
+    public int TreeDetailsTab { get; set; }
+
+    public const double DefaultTreeDetailsWidth = 420;
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]

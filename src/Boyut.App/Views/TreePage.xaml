@@ -8,39 +8,7 @@
     xmlns:vm="using:Boyut.App.ViewModels"
     NavigationCacheMode="Required">
 
-    <Page.Resources>
-        <Style x:Key="TreeItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        </Style>
-    </Page.Resources>
-
     <Grid>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1280" />
-                    </VisualState.StateTriggers>
-                </VisualState>
-                <VisualState x:Name="Narrow">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="SideColumn.Width" Value="0" />
-                        <Setter Target="SideColumn.MinWidth" Value="0" />
-                        <Setter Target="Body.ColumnSpacing" Value="0" />
-                        <Setter Target="Body.RowSpacing" Value="12" />
-                        <Setter Target="SidePanel.(Grid.Row)" Value="1" />
-                        <Setter Target="SidePanel.(Grid.Column)" Value="0" />
-                        <Setter Target="SidePanel.MaxHeight" Value="380" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
         <!-- Empty state -->
         <StackPanel
             HorizontalAlignment="Center"
@@ -58,7 +26,7 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 Style="{StaticResource Secondary}"
-                Text="Ana sayfadan bir sürücü ya da klasör seçin." />
+                Text="Ana sayfadan bir sürücü ya da klasör seçin (Ctrl+O)." />
             <Button
                 HorizontalAlignment="Center"
                 Click="OnGoHome"
@@ -67,16 +35,15 @@
         </StackPanel>
 
         <Grid
-            Padding="{StaticResource PagePadding}"
+            Padding="{StaticResource DensePagePadding}"
             RowSpacing="12"
             Visibility="{x:Bind ViewModel.HasIndex, Mode=OneWay}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Toolbar -->
+            <!-- Toolbar: address bar + commands -->
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -84,11 +51,13 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Button
+                    AutomationProperties.Name="Üst klasör"
                     Command="{x:Bind ViewModel.GoUpCommand}"
                     IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}"
-                    ToolTipService.ToolTip="Üst klasör (Alt+↑)">
+                    ToolTipService.ToolTip="Üst klasör (Alt+↑, Geri tuşu)">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Up" Modifiers="Menu" />
                     </Button.KeyboardAccelerators>
@@ -96,26 +65,58 @@
                 </Button>
                 <Border
                     Grid.Column="1"
-                    Padding="8,0"
+                    MinHeight="32"
+                    Padding="10,0"
                     Background="{ThemeResource ControlFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                     BorderThickness="1"
-                    CornerRadius="4">
-                    <BreadcrumbBar
-                        VerticalAlignment="Center"
-                        ItemClicked="OnCrumbClicked"
-                        ItemsSource="{x:Bind ViewModel.Crumbs}" />
+                    CornerRadius="{StaticResource ControlCornerRadius}">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE8B7;" />
+                        <BreadcrumbBar
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            ItemClicked="OnCrumbClicked"
+                            ItemsSource="{x:Bind ViewModel.Crumbs}" />
+                    </Grid>
                 </Border>
-                <ToggleButton
-                    Grid.Column="2"
-                    IsChecked="{x:Bind ViewModel.ShowTreemap, Mode=TwoWay}"
-                    ToolTipService.ToolTip="Treemap ve çubuk görünümü arasında geçiş">
+                <DropDownButton Grid.Column="2" ToolTipService.ToolTip="Ağacı belirli bir düzeye kadar aç ya da hepsini kapat">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="14" Glyph="&#xE80A;" />
-                        <TextBlock Text="Treemap" />
+                        <FontIcon FontSize="14" Glyph="&#xE8FD;" />
+                        <TextBlock Text="Genişlet" />
                     </StackPanel>
-                </ToggleButton>
-                <DropDownButton Grid.Column="3">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuFlyoutItem
+                                Command="{x:Bind ViewModel.ExpandToLevelCommand}"
+                                CommandParameter="1"
+                                Text="1 düzey" />
+                            <MenuFlyoutItem
+                                Command="{x:Bind ViewModel.ExpandToLevelCommand}"
+                                CommandParameter="2"
+                                Text="2 düzey" />
+                            <MenuFlyoutItem
+                                Command="{x:Bind ViewModel.ExpandToLevelCommand}"
+                                CommandParameter="3"
+                                Text="3 düzey" />
+                            <MenuFlyoutItem
+                                Command="{x:Bind ViewModel.ExpandToLevelCommand}"
+                                CommandParameter="4"
+                                Text="4 düzey" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Command="{x:Bind ViewModel.CollapseAllCommand}" Text="Tümünü daralt" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <DropDownButton Grid.Column="3" ToolTipService.ToolTip="CSV ya da tarama dosyası olarak kaydet">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontSize="14" Glyph="&#xEDE1;" />
                         <TextBlock Text="Dışa aktar" />
@@ -130,8 +131,15 @@
                         </MenuFlyout>
                     </DropDownButton.Flyout>
                 </DropDownButton>
-                <SplitButton
+                <ToggleButton
                     Grid.Column="4"
+                    AutomationProperties.Name="Ayrıntı bölmesi"
+                    IsChecked="{x:Bind ViewModel.ShowDetails, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Ayrıntı bölmesini göster / gizle">
+                    <FontIcon FontSize="14" Glyph="&#xE8A0;" />
+                </ToggleButton>
+                <SplitButton
+                    Grid.Column="5"
                     AutomationProperties.Name="Güncelle"
                     Command="{x:Bind ViewModel.RefreshCommand}"
                     IsEnabled="{x:Bind services:Ui.Not(ViewModel.Session.IsScanning), Mode=OneWay}"
@@ -149,104 +157,16 @@
                 </SplitButton>
             </Grid>
 
-            <!-- Summary cards -->
-            <Grid Grid.Row="1" ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="1.3*" />
-                </Grid.ColumnDefinitions>
-                <Border Style="{StaticResource Card}">
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource CardLabel}" Text="Taranan toplam" />
-                            <TextBlock Style="{StaticResource HeroValue}" Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" />
-                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind ViewModel.AllocatedText, Mode=OneWay}" />
-                        </StackPanel>
-                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
-                            <FontIcon FontSize="16" Foreground="#A08BFF" Glyph="&#xE9D2;" />
-                        </Border>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="1" Style="{StaticResource Card}">
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource CardLabel}" Text="Dosya sayısı" />
-                            <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.FilesText, Mode=OneWay}" />
-                            <TextBlock
-                                Style="{StaticResource CardLabel}"
-                                Text="{x:Bind ViewModel.EngineText, Mode=OneWay}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-                        </StackPanel>
-                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
-                            <FontIcon FontSize="16" Foreground="#3ED8F0" Glyph="&#xE8A5;" />
-                        </Border>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="2" Style="{StaticResource Card}">
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock
-                                Style="{StaticResource CardLabel}"
-                                Text="{x:Bind ViewModel.SelectedName, Mode=OneWay}"
-                                TextTrimming="CharacterEllipsis" />
-                            <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
-                            <TextBlock Style="{StaticResource CardLabel}">
-                                <Run Text="Disk kapasitesinin " /><Run Text="{x:Bind ViewModel.SelectedShare, Mode=OneWay}" />
-                            </TextBlock>
-                        </StackPanel>
-                        <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource IconBadge}">
-                            <FontIcon FontSize="16" Foreground="#F3B37C" Glyph="&#xE8B7;" />
-                        </Border>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="3" Style="{StaticResource Card}">
-                    <StackPanel Spacing="4">
-                        <Grid>
-                            <TextBlock Style="{StaticResource CardLabel}" Text="Boş alan" />
-                            <TextBlock
-                                HorizontalAlignment="Right"
-                                Style="{StaticResource CardLabel}"
-                                Text="{x:Bind ViewModel.CapacityText, Mode=OneWay}" />
-                        </Grid>
-                        <TextBlock Style="{StaticResource CardValue}" Text="{x:Bind ViewModel.FreeText, Mode=OneWay}" />
-                        <ProgressBar
-                            Height="6"
-                            Foreground="{x:Bind services:Ui.UsageBrush(ViewModel.UsedPercent), Mode=OneWay}"
-                            Maximum="100"
-                            Value="{x:Bind ViewModel.UsedPercent, Mode=OneWay}"
-                            Visibility="{x:Bind ViewModel.HasVolumeInfo, Mode=OneWay}" />
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- Tree + side panel (below the tree when the window is narrow) -->
+            <!-- Tree | splitter | details -->
             <Grid
                 x:Name="Body"
-                Grid.Row="2"
-                ColumnSpacing="12">
+                Grid.Row="1"
+                SizeChanged="OnBodySizeChanged">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition x:Name="SideColumn" Width="2*" MinWidth="360" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
 
                 <Border Padding="0" Style="{StaticResource Card}">
                     <Grid>
@@ -255,7 +175,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <controls:GridHeader
-                            Height="40"
+                            Height="36"
                             Padding="24,0,24,0"
                             BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                             BorderThickness="0,0,0,1"
@@ -266,14 +186,17 @@
                             Grid.Row="1"
                             Padding="0,4"
                             DoubleTapped="OnRowDoubleTapped"
-                            ItemContainerStyle="{StaticResource TreeItemStyle}"
+                            ItemContainerStyle="{StaticResource DenseListItem}"
                             ItemsSource="{x:Bind ViewModel.Rows}"
                             KeyDown="OnTreeKeyDown"
                             SelectedItem="{x:Bind ViewModel.SelectedRow, Mode=TwoWay}"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="vm:TreeRow">
-                                    <Grid controls:Columns.Layout="{x:Bind vm:TreeViewModel.Current.Columns}" Opacity="{x:Bind Opacity}">
+                                    <Grid
+                                        controls:Columns.Layout="{x:Bind vm:TreeViewModel.Current.Columns}"
+                                        Background="Transparent"
+                                        Opacity="{x:Bind Opacity}">
                                         <Grid.ContextFlyout>
                                             <MenuFlyout Opening="OnRowMenuOpening">
                                                 <MenuFlyoutItem Click="OnRevealClick" Text="Gezgin'de göster">
@@ -281,20 +204,39 @@
                                                         <FontIcon Glyph="&#xE838;" />
                                                     </MenuFlyoutItem.Icon>
                                                 </MenuFlyoutItem>
-                                                <MenuFlyoutItem Click="OnOpenClick" Text="Aç" />
-                                                <MenuFlyoutItem Click="OnCopyPathClick" Text="Yolu kopyala">
+                                                <MenuFlyoutItem Click="OnOpenClick" Text="Aç">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <FontIcon Glyph="&#xE8E5;" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutItem
+                                                    Click="OnCopyPathClick"
+                                                    KeyboardAcceleratorTextOverride="Ctrl+C"
+                                                    Text="Yolu kopyala">
                                                     <MenuFlyoutItem.Icon>
                                                         <FontIcon Glyph="&#xE8C8;" />
                                                     </MenuFlyoutItem.Icon>
                                                 </MenuFlyoutItem>
-                                                <MenuFlyoutItem Click="OnTerminalClick" Text="Terminalde aç" />
+                                                <MenuFlyoutItem Click="OnTerminalClick" Text="Terminalde aç">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <FontIcon Glyph="&#xE756;" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
                                                 <MenuFlyoutItem Click="OnSearchHereClick" Text="Bu klasörde ara">
                                                     <MenuFlyoutItem.Icon>
                                                         <FontIcon Glyph="&#xE721;" />
                                                     </MenuFlyoutItem.Icon>
                                                 </MenuFlyoutItem>
+                                                <MenuFlyoutItem Click="OnRescanHereClick" Text="Yalnızca bu klasörü tara">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <FontIcon Glyph="&#xE72C;" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
                                                 <MenuFlyoutSeparator />
-                                                <MenuFlyoutItem Click="OnRecycleClick" Text="Geri Dönüşüm'e taşı">
+                                                <MenuFlyoutItem
+                                                    Click="OnRecycleClick"
+                                                    KeyboardAcceleratorTextOverride="Del"
+                                                    Text="Geri Dönüşüm'e taşı">
                                                     <MenuFlyoutItem.Icon>
                                                         <FontIcon Glyph="&#xE74D;" />
                                                     </MenuFlyoutItem.Icon>
@@ -302,60 +244,72 @@
                                             </MenuFlyout>
                                         </Grid.ContextFlyout>
 
-                                        <StackPanel
-                                            Margin="{x:Bind services:Ui.Indent(Depth)}"
-                                            Orientation="Horizontal"
-                                            Spacing="6">
-                                            <Button
-                                                Width="24"
-                                                Height="24"
-                                                Padding="0"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Command="{x:Bind ToggleCommand}"
-                                                IsTabStop="False">
+                                        <!-- Name: indent, chevron, then icon + name over a TreeSize-style share bar -->
+                                        <Grid Margin="{x:Bind services:Ui.Indent(Depth)}" ColumnSpacing="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button Command="{x:Bind ToggleCommand}" Style="{StaticResource ExpanderChevron}">
                                                 <FontIcon FontSize="10" Glyph="{x:Bind Chevron, Mode=OneWay}" />
                                             </Button>
-                                            <FontIcon
-                                                FontSize="16"
-                                                Foreground="{x:Bind services:Ui.Brush(GlyphColor)}"
-                                                Glyph="{x:Bind Glyph}" />
-                                            <TextBlock
-                                                VerticalAlignment="Center"
-                                                Text="{x:Bind Name}"
-                                                TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            Text="{x:Bind SizeText}" />
-                                        <Grid
-                                            Grid.Column="2"
-                                            ColumnSpacing="8"
-                                            Visibility="{x:Bind ShowBar}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="52" />
-                                            </Grid.ColumnDefinitions>
-                                            <ProgressBar Style="{StaticResource ShareBar}" Value="{x:Bind Percent}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center"
-                                                Style="{StaticResource CardLabel}"
-                                                Text="{x:Bind PercentText}" />
+                                            <Grid Grid.Column="1">
+                                                <Grid
+                                                    Height="22"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{x:Bind ShowBar}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="{x:Bind services:BarWidth.Filled(Percent)}" />
+                                                        <ColumnDefinition Width="{x:Bind services:BarWidth.Empty(Percent)}" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Background="{x:Bind services:Ui.Brush(BarColor)}" CornerRadius="4" />
+                                                </Grid>
+                                                <Grid Padding="4,0" ColumnSpacing="8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <FontIcon
+                                                        VerticalAlignment="Center"
+                                                        FontSize="16"
+                                                        Foreground="{x:Bind services:Ui.Brush(GlyphColor)}"
+                                                        Glyph="{x:Bind Glyph}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        Text="{x:Bind Name}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap" />
+                                                </Grid>
+                                            </Grid>
                                         </Grid>
                                         <TextBlock
+                                            Grid.Column="1"
+                                            FontWeight="SemiBold"
+                                            Style="{StaticResource CellNumber}"
+                                            Text="{x:Bind SizeText}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Style="{StaticResource CellNumber}"
+                                            Text="{x:Bind AllocatedText}" />
+                                        <TextBlock
                                             Grid.Column="3"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            Style="{StaticResource Secondary}"
-                                            Text="{x:Bind FilesText}" />
+                                            Style="{StaticResource CellNumber}"
+                                            Text="{x:Bind PercentText}" />
                                         <TextBlock
                                             Grid.Column="4"
-                                            VerticalAlignment="Center"
-                                            Style="{StaticResource Secondary}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Style="{StaticResource CellNumber}"
+                                            Text="{x:Bind FilesText}" />
+                                        <TextBlock
+                                            Grid.Column="5"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Style="{StaticResource CellNumber}"
+                                            Text="{x:Bind FoldersText}" />
+                                        <TextBlock
+                                            Grid.Column="6"
+                                            Style="{StaticResource CellSecondary}"
                                             Text="{x:Bind ModifiedText}" />
                                     </Grid>
                                 </DataTemplate>
@@ -364,43 +318,214 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer
-                    x:Name="SidePanel"
+                <controls:PaneSplitter
+                    x:Name="Splitter"
                     Grid.Column="1"
-                    VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="12">
-                        <!-- Contents of the selected folder -->
-                        <Border Style="{StaticResource Card}">
-                            <StackPanel Spacing="12">
-                                <Grid>
-                                    <TextBlock
-                                        Style="{StaticResource BodyStrongTextBlockStyle}"
-                                        Text="{x:Bind ViewModel.BaseName, Mode=OneWay}"
-                                        TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        HorizontalAlignment="Right"
-                                        Style="{StaticResource CardLabel}"
-                                        Text="{x:Bind ViewModel.BaseSummary, Mode=OneWay}" />
-                                </Grid>
+                    DragCompleted="OnSplitterDragCompleted"
+                    DragStarted="OnSplitterDragStarted"
+                    Dragging="OnSplitterDragging"
+                    ResetRequested="OnSplitterReset"
+                    Visibility="{x:Bind ViewModel.ShowDetails, Mode=OneWay}" />
+
+                <!-- Details pane: what the selection is, and what its folder is made of -->
+                <Border
+                    x:Name="DetailsPane"
+                    Grid.Column="2"
+                    Padding="0"
+                    Style="{StaticResource Card}"
+                    Visibility="{x:Bind ViewModel.ShowDetails, Mode=OneWay}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- The selected item -->
+                        <Grid Padding="16,14,16,8" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border VerticalAlignment="Center" Style="{StaticResource IconBadge}">
+                                <FontIcon
+                                    FontSize="20"
+                                    Foreground="{x:Bind services:Ui.Brush(ViewModel.SelectedGlyphColor), Mode=OneWay}"
+                                    Glyph="{x:Bind ViewModel.SelectedGlyph, Mode=OneWay}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    MaxLines="1"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                                    Text="{x:Bind ViewModel.SelectedName, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    MaxLines="1"
+                                    Style="{StaticResource CardLabel}"
+                                    Text="{x:Bind ViewModel.SelectedPath, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTipService.ToolTip="{x:Bind ViewModel.SelectedPath, Mode=OneWay}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource CardValue}"
+                                    Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
+                                <TextBlock HorizontalAlignment="Right" Style="{StaticResource CardLabel}">
+                                    <Run Text="üst klasörün " /><Run Text="{x:Bind ViewModel.SelectedParentShare, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+
+                        <SelectorBar
+                            x:Name="DetailsTabs"
+                            Grid.Row="1"
+                            Margin="8,0"
+                            SelectionChanged="OnDetailsTabChanged">
+                            <SelectorBarItem Text="Harita" />
+                            <SelectorBarItem Text="İçerik" />
+                            <SelectorBarItem Text="Türler" />
+                            <SelectorBarItem Text="Dosyalar" />
+                            <SelectorBarItem Text="Bilgi" />
+                        </SelectorBar>
+
+                        <!-- The folder the tabs describe -->
+                        <Grid
+                            Grid.Row="2"
+                            Padding="16,8,16,6"
+                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,0"
+                            ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                MaxLines="1"
+                                Style="{StaticResource CardLabel}"
+                                Text="{x:Bind ViewModel.BaseCaption, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <ProgressRing
+                                Grid.Column="1"
+                                Width="14"
+                                Height="14"
+                                IsActive="{x:Bind ViewModel.IsDetailsBusy, Mode=OneWay}" />
+                        </Grid>
+
+                        <Grid Grid.Row="3">
+                            <!-- Harita -->
+                            <Grid
+                                Padding="12,2,12,12"
+                                RowSpacing="6"
+                                Visibility="{x:Bind services:Ui.Tab(ViewModel.DetailsTab, 0), Mode=OneWay}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <controls:TreemapView
-                                    x:Name="Treemap"
-                                    Height="340"
                                     Items="{x:Bind ViewModel.Tiles, Mode=OneWay}"
-                                    TileInvoked="OnTileInvoked"
-                                    Visibility="{x:Bind ViewModel.ShowTreemap, Mode=OneWay}" />
-                                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Bars}" Visibility="{x:Bind ViewModel.ShowBars, Mode=OneWay}">
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:BarItem">
-                                            <Button
-                                                Padding="8,6"
-                                                HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Stretch"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Click="OnBarClick"
-                                                Tag="{x:Bind Node}">
-                                                <Grid ColumnSpacing="12" RowSpacing="4">
+                                    SelectedNode="{x:Bind ViewModel.SelectedNode, Mode=OneWay}"
+                                    TileInvoked="OnTileInvoked" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Style="{StaticResource CardLabel}"
+                                    Text="Kutu alan = boyut. Bir kutuya tıklayınca o klasöre girersiniz; büyük klasörler içeriklerini de gösterir."
+                                    TextWrapping="Wrap" />
+                            </Grid>
+
+                            <!-- İçerik -->
+                            <ScrollViewer Visibility="{x:Bind services:Ui.Tab(ViewModel.DetailsTab, 1), Mode=OneWay}">
+                                <StackPanel Padding="8,0,8,12">
+                                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Contents}">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ContentRow">
+                                                <Button
+                                                    Padding="8,6"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Click="OnContentClick"
+                                                    Style="{StaticResource SubtleButtonStyle}"
+                                                    Tag="{x:Bind Node}"
+                                                    ToolTipService.ToolTip="{x:Bind Detail}">
+                                                    <Grid ColumnSpacing="10" RowSpacing="4">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <FontIcon
+                                                            Grid.RowSpan="2"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="16"
+                                                            Foreground="{x:Bind services:Ui.Brush(GlyphColor)}"
+                                                            Glyph="{x:Bind Glyph}" />
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            Text="{x:Bind Name}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="NoWrap" />
+                                                        <TextBlock
+                                                            Grid.Column="2"
+                                                            HorizontalAlignment="Right"
+                                                            FontWeight="SemiBold"
+                                                            Text="{x:Bind SizeText}" />
+                                                        <Grid
+                                                            Grid.Row="1"
+                                                            Grid.Column="1"
+                                                            Height="6"
+                                                            VerticalAlignment="Center"
+                                                            Background="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                                            CornerRadius="3">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="{x:Bind services:BarWidth.Filled(Percent)}" />
+                                                                <ColumnDefinition Width="{x:Bind services:BarWidth.Empty(Percent)}" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Background="{x:Bind services:Ui.Brush(Color)}" CornerRadius="3" />
+                                                        </Grid>
+                                                        <TextBlock
+                                                            Grid.Row="1"
+                                                            Grid.Column="2"
+                                                            HorizontalAlignment="Right"
+                                                            Style="{StaticResource CardLabel}"
+                                                            Text="{x:Bind PercentText}" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                    <TextBlock
+                                        Margin="8,8,8,0"
+                                        Style="{StaticResource CardLabel}"
+                                        Text="{x:Bind ViewModel.ContentsMore, Mode=OneWay}"
+                                        Visibility="{x:Bind services:Ui.ShowIf(ViewModel.ContentsMore), Mode=OneWay}" />
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Türler -->
+                            <ScrollViewer Visibility="{x:Bind services:Ui.Tab(ViewModel.DetailsTab, 2), Mode=OneWay}">
+                                <StackPanel Padding="16,4,16,16" Spacing="10">
+                                    <Grid>
+                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Dosya türleri" />
+                                        <TextBlock
+                                            HorizontalAlignment="Right"
+                                            Style="{StaticResource CardLabel}"
+                                            Text="{x:Bind ViewModel.TypesSummary, Mode=OneWay}" />
+                                    </Grid>
+                                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Categories}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Spacing="10" />
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:CategoryRow">
+                                                <Grid ColumnSpacing="10" RowSpacing="4">
                                                     <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
@@ -408,125 +533,297 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
-                                                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind SizeText}" />
+                                                    <Border
+                                                        Width="10"
+                                                        Height="10"
+                                                        VerticalAlignment="Center"
+                                                        Background="{x:Bind services:Ui.Brush(Color)}"
+                                                        CornerRadius="3" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Name}" />
+                                                    <TextBlock Grid.Column="2">
+                                                        <Run FontWeight="SemiBold" Text="{x:Bind SizeText}" /><Run Text="  " /><Run Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind PercentText}" />
+                                                    </TextBlock>
                                                     <Grid
                                                         Grid.Row="1"
-                                                        Height="8"
+                                                        Grid.Column="1"
+                                                        Height="6"
                                                         Background="{ThemeResource ControlStrokeColorDefaultBrush}"
-                                                        CornerRadius="4">
+                                                        CornerRadius="3">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="{x:Bind services:BarWidth.Filled(Percent)}" />
                                                             <ColumnDefinition Width="{x:Bind services:BarWidth.Empty(Percent)}" />
                                                         </Grid.ColumnDefinitions>
-                                                        <Border Background="{x:Bind services:Ui.Brush(Color)}" CornerRadius="4" />
+                                                        <Border Background="{x:Bind services:Ui.Brush(Color)}" CornerRadius="3" />
                                                     </Grid>
                                                     <TextBlock
                                                         Grid.Row="1"
-                                                        Grid.Column="1"
+                                                        Grid.Column="2"
+                                                        HorizontalAlignment="Right"
                                                         Style="{StaticResource CardLabel}"
-                                                        Text="{x:Bind PercentText}" />
+                                                        Text="{x:Bind FilesText}" />
                                                 </Grid>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                                <TextBlock Style="{StaticResource CardLabel}" Text="Bir kutuya tıklayarak o klasörün içine girin." />
-                            </StackPanel>
-                        </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
 
-                        <!-- Details -->
-                        <Border Style="{StaticResource Card}">
-                            <StackPanel Spacing="14">
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <FontIcon
-                                        FontSize="32"
-                                        Foreground="#E3A82E"
-                                        Glyph="{x:Bind ViewModel.SelectedGlyph, Mode=OneWay}" />
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock
-                                            Style="{StaticResource SubtitleTextBlockStyle}"
-                                            Text="{x:Bind ViewModel.SelectedName, Mode=OneWay}"
-                                            TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        Margin="0,10,0,0"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="Uzantılar" />
+                                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Extensions}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Spacing="6" />
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:CategoryRow">
+                                                <Grid ColumnSpacing="10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="72" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border
+                                                        HorizontalAlignment="Left"
+                                                        Background="{x:Bind services:Ui.Brush(Color)}"
+                                                        Style="{StaticResource Pill}">
+                                                        <TextBlock
+                                                            Style="{StaticResource PillText}"
+                                                            Text="{x:Bind Name}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                    </Border>
+                                                    <ProgressBar
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource ShareBar}"
+                                                        Value="{x:Bind services:Ui.Clamp100(Percent)}" />
+                                                    <TextBlock
+                                                        Grid.Column="2"
+                                                        MinWidth="150"
+                                                        HorizontalAlignment="Right"
+                                                        HorizontalTextAlignment="Right">
+                                                        <Run FontWeight="SemiBold" Text="{x:Bind SizeText}" /><Run Text="  " /><Run Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind FilesText}" />
+                                                    </TextBlock>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Dosyalar -->
+                            <Grid Visibility="{x:Bind services:Ui.Tab(ViewModel.DetailsTab, 3), Mode=OneWay}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ListView
+                                    x:Name="LargestList"
+                                    Padding="0,0,0,4"
+                                    DoubleTapped="OnLargestDoubleTapped"
+                                    ItemContainerStyle="{StaticResource DenseListItem}"
+                                    ItemsSource="{x:Bind ViewModel.Largest}"
+                                    SelectionMode="Single">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ResultRow">
+                                            <Grid Padding="0,4" ColumnSpacing="10">
+                                                <Grid.ContextFlyout>
+                                                    <MenuFlyout Opening="OnLargestMenuOpening">
+                                                        <MenuFlyoutItem Click="OnLargestShowInTreeClick" Text="Ağaçta göster">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE8B7;" />
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                        <MenuFlyoutItem Click="OnLargestRevealClick" Text="Gezgin'de göster">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE838;" />
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                        <MenuFlyoutItem Click="OnLargestCopyClick" Text="Yolu kopyala">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE8C8;" />
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                        <MenuFlyoutSeparator />
+                                                        <MenuFlyoutItem Click="OnLargestRecycleClick" Text="Geri Dönüşüm'e taşı">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE74D;" />
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                    </MenuFlyout>
+                                                </Grid.ContextFlyout>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Background="{x:Bind services:Ui.Brush(BadgeColor)}" Style="{StaticResource Pill}">
+                                                    <TextBlock Style="{StaticResource PillText}" Text="{x:Bind Badge}" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        Text="{x:Bind Name}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap" />
+                                                    <TextBlock
+                                                        Style="{StaticResource CardLabel}"
+                                                        Text="{x:Bind Folder}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap"
+                                                        ToolTipService.ToolTip="{x:Bind FullPath}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="SemiBold"
+                                                    Text="{x:Bind SizeText}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Margin="16,4,16,10"
+                                    Style="{StaticResource CardLabel}"
+                                    Text="Bu klasörün altındaki en büyük 100 dosya. Çift tık: ağaçta göster, sağ tık: diğer işlemler."
+                                    TextWrapping="Wrap" />
+                            </Grid>
+
+                            <!-- Bilgi -->
+                            <ScrollViewer Visibility="{x:Bind services:Ui.Tab(ViewModel.DetailsTab, 4), Mode=OneWay}">
+                                <StackPanel Padding="16,8,16,16" Spacing="16">
+                                    <Grid ColumnSpacing="12" RowSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Boyut" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Diskte kapladığı" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedAllocated, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Dosya" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedFiles, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Grid.Column="1">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Alt klasör" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedFolders, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Üst klasördeki payı" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedParentShare, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="1">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Disk kapasitesindeki payı" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedDiskShare, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="3">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Tür" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedKind, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="3" Grid.Column="1">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Değiştirilme" />
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedModified, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="4" Grid.ColumnSpan="2">
+                                            <TextBlock Style="{StaticResource CardLabel}" Text="Öznitelikler" />
+                                            <TextBlock
+                                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                                Text="{x:Bind ViewModel.SelectedAttributes, Mode=OneWay}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Style="{StaticResource CardLabel}" Text="Konum" />
                                         <TextBlock
                                             IsTextSelectionEnabled="True"
-                                            Style="{StaticResource CardLabel}"
+                                            FontFamily="{StaticResource MonoFont}"
+                                            FontSize="12"
                                             Text="{x:Bind ViewModel.SelectedPath, Mode=OneWay}"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
-                                </Grid>
-                                <Grid ColumnSpacing="12" RowSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Boyut" />
-                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedSize, Mode=OneWay}" />
+
+                                    <StackPanel Spacing="2">
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{x:Bind ViewModel.RevealInExplorerCommand}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon FontSize="14" Glyph="&#xE838;" />
+                                                <TextBlock Text="Gezgin'de göster" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{x:Bind ViewModel.OpenItemCommand}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon FontSize="14" Glyph="&#xE8E5;" />
+                                                <TextBlock Text="Aç" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{x:Bind ViewModel.CopyPathCommand}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon FontSize="14" Glyph="&#xE8C8;" />
+                                                <TextBlock Text="Yolu kopyala (Ctrl+C)" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{x:Bind ViewModel.OpenTerminalCommand}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon FontSize="14" Glyph="&#xE756;" />
+                                                <TextBlock Text="Terminalde aç" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{x:Bind ViewModel.SearchHereCommand}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon FontSize="14" Glyph="&#xE721;" />
+                                                <TextBlock Text="Bu klasörde ara" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Click="OnRecycleSelectedClick"
+                                            IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}"
+                                            Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <FontIcon
+                                                    FontSize="14"
+                                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                                    Glyph="&#xE74D;" />
+                                                <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="Geri Dönüşüm'e taşı (Del)" />
+                                            </StackPanel>
+                                        </Button>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Diskte kapladığı" />
-                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedAllocated, Mode=OneWay}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="1">
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Dosya" />
-                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedFiles, Mode=OneWay}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="1" Grid.Column="1">
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Tür" />
-                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedKind, Mode=OneWay}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="2">
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Değiştirilme" />
-                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.SelectedModified, Mode=OneWay}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="2" Grid.Column="1">
-                                        <TextBlock Style="{StaticResource CardLabel}" Text="Öznitelikler" />
-                                        <TextBlock
-                                            Style="{StaticResource BodyStrongTextBlockStyle}"
-                                            Text="{x:Bind ViewModel.SelectedAttributes, Mode=OneWay}"
-                                            TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Command="{x:Bind ViewModel.RevealInExplorerCommand}">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <FontIcon FontSize="14" Glyph="&#xE838;" />
-                                            <TextBlock Text="Gezgin'de göster" />
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Command="{x:Bind ViewModel.CopyPathCommand}" ToolTipService.ToolTip="Yolu kopyala">
-                                        <FontIcon FontSize="14" Glyph="&#xE8C8;" />
-                                    </Button>
-                                    <Button Command="{x:Bind ViewModel.SearchHereCommand}" ToolTipService.ToolTip="Bu klasörde ara">
-                                        <FontIcon FontSize="14" Glyph="&#xE721;" />
-                                    </Button>
-                                    <Button
-                                        Click="OnRecycleSelectedClick"
-                                        IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}"
-                                        ToolTipService.ToolTip="Geri Dönüşüm'e taşı (Del)">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <FontIcon
-                                                FontSize="14"
-                                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                                                Glyph="&#xE74D;" />
-                                            <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="Geri Dönüşüm'e taşı" />
-                                        </StackPanel>
-                                    </Button>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
     </Grid>

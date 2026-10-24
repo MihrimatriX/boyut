@@ -8,15 +8,7 @@
     xmlns:vm="using:Boyut.App.ViewModels"
     NavigationCacheMode="Required">
 
-    <Page.Resources>
-        <Style x:Key="ResultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        </Style>
-    </Page.Resources>
-
-    <Grid Padding="{StaticResource PagePadding}" RowSpacing="16">
+    <Grid Padding="{StaticResource DensePagePadding}" RowSpacing="12">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
@@ -140,31 +132,38 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox
                         MinWidth="150"
+                        AutomationProperties.Name="Boyut filtresi"
                         ItemsSource="{x:Bind ViewModel.SizeFilters}"
                         SelectedIndex="{x:Bind ViewModel.SizeFilter, Mode=TwoWay}" />
                     <ComboBox
                         Grid.Column="1"
                         MinWidth="150"
+                        AutomationProperties.Name="Tarih filtresi"
                         ItemsSource="{x:Bind ViewModel.DateFilters}"
                         SelectedIndex="{x:Bind ViewModel.DateFilter, Mode=TwoWay}" />
                     <ComboBox
                         Grid.Column="2"
                         MinWidth="150"
+                        AutomationProperties.Name="Tür filtresi"
                         ItemsSource="{x:Bind ViewModel.TypeFilters}"
                         SelectedIndex="{x:Bind ViewModel.TypeFilter, Mode=TwoWay}" />
+                    <DropDownButton Grid.Column="3" ToolTipService.ToolTip="Eşleştirme seçenekleri">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE71C;" />
+                            <TextBlock Text="Seçenekler" />
+                        </StackPanel>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.CaseSensitive, Mode=TwoWay}" Text="Büyük/küçük harf duyarlı" />
+                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.FullPath, Mode=TwoWay}" Text="Tam yolda eşleştir" />
+                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.IncludeDirectories, Mode=TwoWay}" Text="Klasörleri dahil et" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
                     <HyperlinkButton
-                        Grid.Column="3"
+                        Grid.Column="4"
                         Command="{x:Bind ViewModel.ResetFiltersCommand}"
                         Content="Filtreleri sıfırla" />
-                    <StackPanel
-                        Grid.Column="4"
-                        HorizontalAlignment="Right"
-                        Orientation="Horizontal"
-                        Spacing="16">
-                        <CheckBox Content="Büyük/küçük harf duyarlı" IsChecked="{x:Bind ViewModel.CaseSensitive, Mode=TwoWay}" />
-                        <CheckBox Content="Tam yolda eşleştir" IsChecked="{x:Bind ViewModel.FullPath, Mode=TwoWay}" />
-                        <CheckBox Content="Klasörleri dahil et" IsChecked="{x:Bind ViewModel.IncludeDirectories, Mode=TwoWay}" />
-                    </StackPanel>
                 </Grid>
             </StackPanel>
         </Border>
@@ -266,15 +265,15 @@
                     </Grid.RowDefinitions>
 
                     <Grid
-                        Padding="16,12"
+                        Padding="16,8,8,8"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1"
                         ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel>
+                        <StackPanel VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" />
                                 <ProgressRing
@@ -283,40 +282,62 @@
                                     IsActive="{x:Bind ViewModel.IsSearching, Mode=OneWay}" />
                             </StackPanel>
                             <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind ViewModel.Detail, Mode=OneWay}" />
-                        </StackPanel>
-                        <StackPanel
-                            Grid.Column="1"
-                            Orientation="Horizontal"
-                            Spacing="8">
                             <TextBlock
-                                VerticalAlignment="Center"
-                                Style="{StaticResource BodyStrongTextBlockStyle}"
-                                Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" />
-                            <Button
+                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}"
+                                Visibility="{x:Bind services:Ui.ShowIf(ViewModel.SelectionText), Mode=OneWay}" />
+                        </StackPanel>
+                        <!-- Commands overflow into "…" when the window is narrow -->
+                        <CommandBar
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            DefaultLabelPosition="Right">
+                            <AppBarButton
                                 Click="OnShowInTreeClick"
-                                Content="Ağaçta göster"
-                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
-                            <Button
+                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}"
+                                Label="Ağaçta göster">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE8B7;" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
                                 Click="OnRevealClick"
-                                Content="Gezgin'de göster"
-                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
-                            <Button
+                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}"
+                                Label="Gezgin'de göster">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE838;" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
                                 Click="OnCopyPathsClick"
-                                Content="Yolları kopyala"
-                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
-                            <Button Click="OnRecycleClick" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
-                                <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="Geri Dönüşüm'e taşı" />
-                            </Button>
-                            <Button
+                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}"
+                                Label="Yolları kopyala">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE8C8;" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                Click="OnRecycleClick"
+                                IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}"
+                                Label="Geri Dönüşüm'e taşı">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xE74D;" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarSeparator />
+                            <AppBarButton
                                 Click="OnExportClick"
                                 IsEnabled="{x:Bind ViewModel.HasResults, Mode=OneWay}"
+                                Label="CSV"
                                 ToolTipService.ToolTip="Sonuçları CSV olarak kaydet">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon FontSize="14" Glyph="&#xEDE1;" />
-                                    <TextBlock Text="CSV" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="&#xEDE1;" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                        </CommandBar>
                     </Grid>
 
                     <controls:GridHeader
@@ -332,7 +353,7 @@
                         Grid.Row="2"
                         Padding="0,4"
                         DoubleTapped="OnResultDoubleTapped"
-                        ItemContainerStyle="{StaticResource ResultItemStyle}"
+                        ItemContainerStyle="{StaticResource DenseListItem}"
                         ItemsSource="{x:Bind ViewModel.Results}"
                         KeyDown="OnResultKeyDown"
                         SelectionChanged="OnResultSelectionChanged"
@@ -340,34 +361,32 @@
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:ResultRow">
                                 <Grid controls:Columns.Layout="{x:Bind vm:SearchViewModel.Current.Columns}">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
                                         <FontIcon
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
                                             FontSize="16"
                                             Foreground="#E3A82E"
                                             Glyph="&#xE8B7;"
                                             Visibility="{x:Bind IsDirectory}" />
                                         <Border
-                                            MinWidth="40"
-                                            Height="20"
-                                            Padding="4,0"
-                                            VerticalAlignment="Center"
                                             Background="{x:Bind services:Ui.Brush(BadgeColor)}"
-                                            CornerRadius="4"
+                                            Style="{StaticResource Pill}"
                                             Visibility="{x:Bind IsFile}">
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="10"
-                                                FontWeight="Bold"
-                                                Foreground="#14202B"
-                                                Text="{x:Bind Badge}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{x:Bind Badge}" />
                                         </Border>
                                         <TextBlock
+                                            Grid.Column="1"
                                             VerticalAlignment="Center"
                                             Text="{x:Bind Name}"
                                             TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap"
                                             ToolTipService.ToolTip="{x:Bind FullPath}" />
-                                    </StackPanel>
+                                    </Grid>
                                     <TextBlock
                                         Grid.Column="1"
                                         VerticalAlignment="Center"

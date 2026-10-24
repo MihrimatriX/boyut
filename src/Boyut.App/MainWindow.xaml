@@ -21,38 +21,37 @@
             <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnOpenFolder" />
         </Grid.KeyboardAccelerators>
 
-        <!-- Soft brand glow behind the glass cards -->
-        <Rectangle Grid.RowSpan="2" Fill="{ThemeResource GlowA}" IsHitTestVisible="False" />
-        <Rectangle Grid.RowSpan="2" Fill="{ThemeResource GlowB}" IsHitTestVisible="False" />
-
         <TitleBar
             x:Name="AppTitleBar"
             Title="Boyut"
-            Subtitle="{x:Bind Session.RootLabel, Mode=OneWay}"
             IsBackButtonVisible="False"
-            IsPaneToggleButtonVisible="False">
+            IsPaneToggleButtonVisible="True"
+            PaneToggleRequested="OnPaneToggleRequested"
+            Subtitle="{x:Bind Session.RootLabel, Mode=OneWay}">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Boyut.png" />
             </TitleBar.IconSource>
             <AutoSuggestBox
                 x:Name="GlobalSearch"
                 MinWidth="320"
-                MaxWidth="520"
+                MaxWidth="560"
                 VerticalAlignment="Center"
                 IsEnabled="{x:Bind Session.HasIndex, Mode=OneWay}"
-                PlaceholderText="Bu taramada ara (Ctrl+F) — ör. *.mp4 size:&gt;1gb"
+                PlaceholderText="Bu taramada ara (Ctrl+F): *.mp4 size:&gt;1gb"
                 QueryIcon="Find"
                 QuerySubmitted="OnGlobalSearchSubmitted" />
         </TitleBar>
 
+        <!-- Compact rail: the data gets the width; the TitleBar's pane button opens the labels -->
         <NavigationView
             x:Name="Nav"
             Grid.Row="1"
             IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="False"
             IsSettingsVisible="True"
             IsTitleBarAutoPaddingEnabled="False"
-            OpenPaneLength="232"
-            PaneDisplayMode="Left"
+            OpenPaneLength="240"
+            PaneDisplayMode="LeftCompact"
             SelectionChanged="OnNavigationSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Ana sayfa" Tag="home">
@@ -87,34 +86,62 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <InfoBar
-                    Margin="24,12,24,0"
-                    IsOpen="{x:Bind services:Ui.HasText(Session.Notice), Mode=OneWay}"
+                    Margin="16,12,16,0"
                     Closed="OnNoticeClosed"
+                    IsOpen="{x:Bind services:Ui.HasText(Session.Notice), Mode=OneWay}"
                     Message="{x:Bind Session.Notice, Mode=OneWay}"
                     Severity="{x:Bind NoticeSeverity(Session.NoticeIsError), Mode=OneWay}" />
 
+                <!-- Scan in progress -->
                 <Border
                     Grid.Row="1"
-                    Margin="24,12,24,0"
+                    Margin="16,12,16,0"
                     Style="{StaticResource Card}"
                     Visibility="{x:Bind Session.IsScanning, Mode=OneWay}">
-                    <Grid ColumnSpacing="16">
+                    <Grid ColumnSpacing="16" RowSpacing="8">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="6">
-                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ProgressRing
+                            Grid.RowSpan="2"
+                            Width="28"
+                            Height="28"
+                            VerticalAlignment="Center"
+                            IsActive="{x:Bind Session.IsScanning, Mode=OneWay}" />
+                        <Grid Grid.Column="1" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                MaxLines="1"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                TextTrimming="CharacterEllipsis">
                                 <Run Text="Taranıyor: " /><Run Text="{x:Bind Session.ScanTarget, Mode=OneWay}" />
                             </TextBlock>
+                            <TextBlock
+                                Grid.Column="1"
+                                Style="{StaticResource CardLabel}"
+                                Text="{x:Bind Session.ProgressText, Mode=OneWay}" />
+                        </Grid>
+                        <StackPanel
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Spacing="6">
                             <ProgressBar
                                 IsIndeterminate="{x:Bind Session.ProgressIndeterminate, Mode=OneWay}"
                                 Maximum="100"
                                 Value="{x:Bind Session.ProgressValue, Mode=OneWay}" />
-                            <TextBlock Style="{StaticResource CardLabel}" Text="{x:Bind Session.ProgressText, Mode=OneWay}" />
                             <TextBlock
                                 MaxLines="1"
                                 Style="{StaticResource CardLabel}"
@@ -122,7 +149,8 @@
                                 TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                         <Button
-                            Grid.Column="1"
+                            Grid.RowSpan="2"
+                            Grid.Column="2"
                             VerticalAlignment="Center"
                             Click="OnCancelScan"
                             Content="İptal" />
@@ -130,6 +158,50 @@
                 </Border>
 
                 <Frame x:Name="ContentFrame" Grid.Row="2" />
+
+                <!-- Status bar -->
+                <Grid
+                    Grid.Row="3"
+                    MinHeight="32"
+                    Padding="16,0"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,1,0,0"
+                    ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xEDA2;" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource CardLabel}"
+                        Text="{x:Bind Session.StatusText, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap"
+                        ToolTipService.ToolTip="{x:Bind Session.StatusText, Mode=OneWay}" />
+                    <StackPanel
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        Visibility="{x:Bind Session.HasVolumeInfo, Mode=OneWay}">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Style="{StaticResource CardLabel}"
+                            Text="{x:Bind Session.FreeSpaceText, Mode=OneWay}" />
+                        <ProgressBar
+                            Width="120"
+                            Foreground="{x:Bind services:Ui.UsageBrush(Session.UsedPercent), Mode=OneWay}"
+                            Style="{StaticResource ShareBar}"
+                            Value="{x:Bind Session.UsedPercent, Mode=OneWay}" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </NavigationView>
     </Grid>

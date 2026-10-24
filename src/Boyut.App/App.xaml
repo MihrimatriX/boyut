@@ -9,89 +9,30 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Dark">
-                    <!-- Indigo → cyan, for hero numbers, bars and highlighted borders -->
-                    <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Offset="0" Color="#A08BFF" />
-                        <GradientStop Offset="1" Color="#3ED8F0" />
-                    </LinearGradientBrush>
-                    <!-- Glass card: translucent fill over the glowing backdrop, light catching the top edge -->
-                    <LinearGradientBrush x:Key="GlassFill" StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Offset="0" Color="#1CFFFFFF" />
-                        <GradientStop Offset="1" Color="#0AFFFFFF" />
-                    </LinearGradientBrush>
-                    <LinearGradientBrush x:Key="GlassStroke" StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Offset="0" Color="#38FFFFFF" />
-                        <GradientStop Offset="1" Color="#0CFFFFFF" />
-                    </LinearGradientBrush>
-                    <RadialGradientBrush x:Key="GlowA" Center="0.1,0" GradientOrigin="0.1,0" RadiusX="0.7" RadiusY="0.9">
-                        <GradientStop Offset="0" Color="#667C5CFF" />
-                        <GradientStop Offset="1" Color="#007C5CFF" />
-                    </RadialGradientBrush>
-                    <RadialGradientBrush x:Key="GlowB" Center="1,1" GradientOrigin="1,1" RadiusX="0.7" RadiusY="0.8">
-                        <GradientStop Offset="0" Color="#4422D3EE" />
-                        <GradientStop Offset="1" Color="#0022D3EE" />
-                    </RadialGradientBrush>
-                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#14000000" />
-                    <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#18FFFFFF" />
-                    <SolidColorBrush x:Key="BadgeFill" Color="#24FFFFFF" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Light">
-                    <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Offset="0" Color="#6344F0" />
-                        <GradientStop Offset="1" Color="#0B93B5" />
-                    </LinearGradientBrush>
-                    <LinearGradientBrush x:Key="GlassFill" StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Offset="0" Color="#C8FFFFFF" />
-                        <GradientStop Offset="1" Color="#90FFFFFF" />
-                    </LinearGradientBrush>
-                    <LinearGradientBrush x:Key="GlassStroke" StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Offset="0" Color="#FFFFFFFF" />
-                        <GradientStop Offset="1" Color="#1A000000" />
-                    </LinearGradientBrush>
-                    <RadialGradientBrush x:Key="GlowA" Center="0.1,0" GradientOrigin="0.1,0" RadiusX="0.7" RadiusY="0.9">
-                        <GradientStop Offset="0" Color="#447C5CFF" />
-                        <GradientStop Offset="1" Color="#007C5CFF" />
-                    </RadialGradientBrush>
-                    <RadialGradientBrush x:Key="GlowB" Center="1,1" GradientOrigin="1,1" RadiusX="0.7" RadiusY="0.8">
-                        <GradientStop Offset="0" Color="#3322D3EE" />
-                        <GradientStop Offset="1" Color="#0022D3EE" />
-                    </RadialGradientBrush>
-                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#40FFFFFF" />
-                    <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#14000000" />
-                    <SolidColorBrush x:Key="BadgeFill" Color="#14000000" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-
-            <!-- Brand: indigo accent (overrides the Windows accent for every Fluent control) -->
-            <Color x:Key="SystemAccentColor">#7C5CFF</Color>
-            <Color x:Key="SystemAccentColorLight1">#9479FF</Color>
-            <Color x:Key="SystemAccentColorLight2">#AC96FF</Color>
-            <Color x:Key="SystemAccentColorLight3">#C9BBFF</Color>
-            <Color x:Key="SystemAccentColorDark1">#6744F0</Color>
-            <Color x:Key="SystemAccentColorDark2">#5333D0</Color>
-            <Color x:Key="SystemAccentColorDark3">#3D23A6</Color>
+            <!--
+                Plain Windows 11 (Fluent 2) materials: Mica behind, layer and card fills from the system,
+                the user's accent colour. Data colours (bars, treemap, file types) live in Services/Ui.cs.
+            -->
 
             <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
-            <x:Double x:Key="PageMaxWidth">1600</x:Double>
             <Thickness x:Key="PagePadding">24,16,24,24</Thickness>
+            <!-- Dense pages (tree, search, changes) use the space for data -->
+            <Thickness x:Key="DensePagePadding">16,12,16,12</Thickness>
 
-            <!-- Glass card -->
             <Style x:Key="Card" TargetType="Border">
-                <Setter Property="Background" Value="{ThemeResource GlassFill}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource GlassStroke}" />
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
                 <Setter Property="Padding" Value="16" />
             </Style>
 
-            <!-- Rounded icon tile in a card corner; set Background to a tint -->
+            <!-- Rounded icon tile at the start of a card or header -->
             <Style x:Key="IconBadge" TargetType="Border">
-                <Setter Property="Width" Value="36" />
-                <Setter Property="Height" Value="36" />
-                <Setter Property="CornerRadius" Value="10" />
-                <Setter Property="Background" Value="{ThemeResource BadgeFill}" />
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
+                <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
             </Style>
 
             <Style x:Key="CardLabel" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
@@ -99,25 +40,52 @@
             </Style>
 
             <Style x:Key="CardValue" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}">
-                <Setter Property="FontSize" Value="24" />
                 <Setter Property="FontWeight" Value="SemiBold" />
             </Style>
 
             <!-- The one number a card is about -->
             <Style x:Key="HeroValue" TargetType="TextBlock" BasedOn="{StaticResource CardValue}">
                 <Setter Property="FontSize" Value="28" />
-                <Setter Property="Foreground" Value="{ThemeResource BrandGradient}" />
+                <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
             </Style>
 
-            <Style x:Key="PageTitle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
-                <Setter Property="FontSize" Value="32" />
-                <Setter Property="FontWeight" Value="Bold" />
-                <Setter Property="Foreground" Value="{ThemeResource BrandGradient}" />
-            </Style>
+            <Style x:Key="PageTitle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}" />
 
             <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
-                <Setter Property="FontSize" Value="16" />
                 <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
+
+            <Style x:Key="Secondary" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <!-- Numbers in list cells: right aligned, one line -->
+            <Style x:Key="CellNumber" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+            </Style>
+            <Style x:Key="CellSecondary" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <!-- Rows of the tree, search and change lists: compact like Explorer's details view -->
+            <Style x:Key="DenseListItem" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+
+            <!-- Chevron that opens and closes a tree row -->
+            <Style x:Key="ExpanderChevron" TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
+                <Setter Property="Width" Value="24" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
 
             <!-- List header (Controls/GridColumns.cs): sortable cell and the resize divider between cells -->
@@ -127,22 +95,28 @@
                 <Setter Property="Padding" Value="4,2" />
                 <Setter Property="Margin" Value="-4,0" />
                 <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="CharacterSpacing" Value="60" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
             </Style>
             <Style x:Key="GridHeaderDivider" TargetType="Border">
                 <Setter Property="Width" Value="1" />
-                <Setter Property="Margin" Value="0,10" />
+                <Setter Property="Margin" Value="0,9" />
                 <Setter Property="HorizontalAlignment" Value="Center" />
                 <Setter Property="Background" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
             </Style>
 
-            <Style x:Key="Secondary" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <!-- Grip in the middle of Controls/PaneSplitter.cs -->
+            <Style x:Key="PaneSplitterGrip" TargetType="Border">
+                <Setter Property="Width" Value="4" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="CornerRadius" Value="2" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Background" Value="{ThemeResource ControlStrongFillColorDefaultBrush}" />
             </Style>
 
-            <!-- Thin usage bar, e.g. "share of parent" in the tree -->
+            <!-- Thin usage bar, e.g. disk usage or a share of a total -->
             <Style x:Key="ShareBar" TargetType="ProgressBar">
                 <Setter Property="Minimum" Value="0" />
                 <Setter Property="Maximum" Value="100" />
@@ -150,7 +124,20 @@
                 <Setter Property="Height" Value="6" />
                 <Setter Property="CornerRadius" Value="3" />
                 <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="Foreground" Value="{ThemeResource BrandGradient}" />
+            </Style>
+
+            <!-- Small rounded label, e.g. a file extension or a safety level -->
+            <Style x:Key="Pill" TargetType="Border">
+                <Setter Property="Padding" Value="6,1" />
+                <Setter Property="MinWidth" Value="40" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="PillText" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="#14202B" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

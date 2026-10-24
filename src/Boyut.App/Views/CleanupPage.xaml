@@ -43,17 +43,14 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Style="{StaticResource CardLabel}" Text="Güvenle kazanılabilir" />
-                            <TextBlock
-                                FontSize="34"
-                                FontWeight="SemiBold"
-                                Text="{x:Bind ViewModel.SafeText, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource HeroValue}" Text="{x:Bind ViewModel.SafeText, Mode=OneWay}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1">
                             <TextBlock Style="{StaticResource CardLabel}" Text="Gözden geçirilecek" />
                             <TextBlock
-                                FontSize="34"
-                                FontWeight="SemiBold"
+                                FontSize="28"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CardValue}"
                                 Text="{x:Bind ViewModel.CautionText, Mode=OneWay}" />
                         </StackPanel>
                         <StackPanel

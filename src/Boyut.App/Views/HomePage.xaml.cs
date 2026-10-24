@@ -32,14 +32,14 @@ public sealed partial class HomePage : Page, IRefreshable
         if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
         e.AcceptedOperation = DataPackageOperation.Link;
         e.DragUIOverride.Caption = "Boyut ile analiz et";
-        DropZone.BorderThickness = new Thickness(3);
+        DropOutline.StrokeThickness = 3;
     }
 
-    private void OnDragLeave(object sender, DragEventArgs e) => DropZone.BorderThickness = new Thickness(1.5);
+    private void OnDragLeave(object sender, DragEventArgs e) => DropOutline.StrokeThickness = 1;
 
     private async void OnDrop(object sender, DragEventArgs e)
     {
-        DropZone.BorderThickness = new Thickness(1.5);
+        DropOutline.StrokeThickness = 1;
         if (!e.DataView.Contains(StandardDataFormats.StorageItems) || App.MainWindow is not { } window) return;
         var items = await e.DataView.GetStorageItemsAsync();
 

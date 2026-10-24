@@ -242,7 +242,6 @@ public static class Columns
 /// <summary>Header row for a <see cref="GridColumns"/> list: click to sort, drag a column edge to resize (double-click resets), right-click to pick columns.</summary>
 public sealed partial class GridHeader : Grid
 {
-    private static readonly System.Globalization.CultureInfo Tr = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
     private readonly List<(GridColumn Column, TextBlock Label, FontIcon Arrow, ColumnGripper? Grip)> parts = [];
     private double dragStartX, dragStartWidth;
 
@@ -284,7 +283,7 @@ public sealed partial class GridHeader : Grid
         for (int i = 0; i < columns.Items.Count; i++)
         {
             var c = columns.Items[i];
-            var label = new TextBlock { Text = c.Header.ToUpper(Tr), TextTrimming = TextTrimming.CharacterEllipsis };
+            var label = new TextBlock { Text = c.Header, TextTrimming = TextTrimming.CharacterEllipsis };
             var arrow = new FontIcon { FontSize = 10, Visibility = Visibility.Collapsed };
             var cell = new Button
             {

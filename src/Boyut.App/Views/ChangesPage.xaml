@@ -8,15 +8,7 @@
     xmlns:vm="using:Boyut.App.ViewModels"
     NavigationCacheMode="Required">
 
-    <Page.Resources>
-        <Style x:Key="DiffItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        </Style>
-    </Page.Resources>
-
-    <Grid Padding="{StaticResource PagePadding}" RowSpacing="12">
+    <Grid Padding="{StaticResource DensePagePadding}" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -34,8 +26,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock
+                Margin="0,0,12,0"
                 VerticalAlignment="Bottom"
-                Style="{StaticResource SubtitleTextBlockStyle}"
+                Style="{StaticResource PageTitle}"
                 Text="Değişimler" />
             <ComboBox
                 Grid.Column="1"
@@ -133,7 +126,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <controls:GridHeader
-                        Height="40"
+                        Height="36"
                         Padding="24,0,24,0"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1"
@@ -144,7 +137,7 @@
                         Grid.Row="1"
                         Padding="0,4"
                         DoubleTapped="OnRowDoubleTapped"
-                        ItemContainerStyle="{StaticResource DiffItemStyle}"
+                        ItemContainerStyle="{StaticResource DenseListItem}"
                         ItemsSource="{x:Bind ViewModel.Rows}"
                         KeyDown="OnListKeyDown"
                         SelectedItem="{x:Bind ViewModel.SelectedRow, Mode=TwoWay}"
@@ -152,29 +145,28 @@
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:DiffRow">
                                 <Grid controls:Columns.Layout="{x:Bind vm:ChangesViewModel.Current.Columns}" Opacity="{x:Bind Opacity}">
-                                    <StackPanel
-                                        Margin="{x:Bind services:Ui.Indent(Depth)}"
-                                        Orientation="Horizontal"
-                                        Spacing="6">
-                                        <Button
-                                            Width="24"
-                                            Height="24"
-                                            Padding="0"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Command="{x:Bind ToggleCommand}"
-                                            IsTabStop="False">
+                                    <Grid Margin="{x:Bind services:Ui.Indent(Depth)}" ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="24" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Command="{x:Bind ToggleCommand}" Style="{StaticResource ExpanderChevron}">
                                             <FontIcon FontSize="10" Glyph="{x:Bind Chevron, Mode=OneWay}" />
                                         </Button>
                                         <FontIcon
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
                                             FontSize="16"
                                             Foreground="{x:Bind services:Ui.Brush(GlyphColor)}"
                                             Glyph="{x:Bind Glyph}" />
                                         <TextBlock
+                                            Grid.Column="2"
                                             VerticalAlignment="Center"
                                             Text="{x:Bind Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                    </Grid>
                                     <TextBlock
                                         Grid.Column="1"
                                         HorizontalAlignment="Right"

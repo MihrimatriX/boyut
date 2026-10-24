@@ -25,6 +25,12 @@ public sealed partial class ScanSession : ObservableObject
     [ObservableProperty] public partial double ProgressValue { get; private set; }
     [ObservableProperty] public partial bool ProgressIndeterminate { get; private set; } = true;
 
+    // Status bar at the bottom of the window
+    [ObservableProperty] public partial string StatusText { get; private set; } = "Henüz tarama yok. Bir sürücü ya da klasör seçin.";
+    [ObservableProperty] public partial string FreeSpaceText { get; private set; } = "";
+    [ObservableProperty] public partial double UsedPercent { get; private set; }
+    [ObservableProperty] public partial bool HasVolumeInfo { get; private set; }
+
     /// <summary>Last problem worth telling the user about (shown in an InfoBar).</summary>
     [ObservableProperty] public partial string? Notice { get; set; }
     [ObservableProperty] public partial bool NoticeIsError { get; set; }
@@ -45,7 +51,31 @@ public sealed partial class ScanSession : ObservableObject
     {
         OnPropertyChanged(nameof(HasIndex));
         OnPropertyChanged(nameof(RootLabel));
+        UpdateStatus(value);
         IndexChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateStatus(FileIndex? index)
+    {
+        if (index is null)
+        {
+            StatusText = "Henüz tarama yok. Bir sürücü ya da klasör seçin.";
+            HasVolumeInfo = false;
+            return;
+        }
+        var m = index.Metadata;
+        int folders = 0;
+        for (int n = 1; n < index.Count; n++)
+            if (index.IsDirectory(n)) folders++;
+        StatusText = $"{m.RootPath} · {Ui.Size(index.TotalSize)} · {Ui.Count(index.TotalFiles)} dosya, {Ui.Count(folders)} klasör · " +
+                     $"{(m.Engine == "mft" ? "MFT" : "Klasör taraması")}, {SizeFormatter.FormatDuration(m.Duration)} · {Ui.Date(m.ScannedAtUtc)}";
+        HasVolumeInfo = m.VolumeTotalBytes is > 0 && m.VolumeFreeBytes is not null;
+        if (HasVolumeInfo)
+        {
+            long total = m.VolumeTotalBytes!.Value, free = m.VolumeFreeBytes!.Value;
+            UsedPercent = Math.Clamp((total - free) * 100.0 / total, 0, 100);
+            FreeSpaceText = $"{Ui.Size(free)} boş / {Ui.Size(total)}";
+        }
     }
 
     /// <summary>Raised on the UI thread after the recent-scans list changed.</summary>

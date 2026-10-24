@@ -41,7 +41,9 @@ public static class Ui
     public static bool Not(bool value) => !value;
     public static bool HasText(string? text) => !string.IsNullOrEmpty(text);
     public static string DuplicateButton(bool running) => running ? "Durdur" : "Kopyaları bul";
-    public static Thickness Indent(int depth) => new(depth * 18, 0, 0, 0);
+    public static Thickness Indent(int depth) => new(depth * 16, 0, 0, 0);
+    /// <summary>For a tab strip: visible when <paramref name="selected"/> is <paramref name="tab"/>.</summary>
+    public static Visibility Tab(int selected, int tab) => selected == tab ? Visibility.Visible : Visibility.Collapsed;
     public static double Clamp100(double value) => Math.Clamp(value, 0, 100);
 
     public static SolidColorBrush Brush(Color color) => new(color);
@@ -72,12 +74,32 @@ public static class Ui
 
     public static SolidColorBrush UsageBrush(double usedPercent) => new(UsageColor(usedPercent));
 
-    /// <summary>How full a disk is, at a glance: drive cards and the tree's free-space bar.</summary>
-    public static Color UsageColor(double usedPercent)
+    /// <summary>How full a disk is, at a glance (drive cards, status bar): blue, amber from 80 %, red from 90 % like Explorer.</summary>
+    public static Color UsageColor(double usedPercent) => usedPercent switch
     {
-        // TODO(human): pick the bar colour from how full the disk is (0–100).
-        return Hex("#7C5CFF");
+        >= 90 => Hex("#E5484D"),
+        >= 80 => Hex("#F0A020"),
+        _ => Hex("#3B82F6"),
+    };
+
+    /// <summary>TreeSize-style share bars behind tree names: one hue per level, translucent so the name stays readable in both themes.</summary>
+    public static Color LevelColor(int depth)
+    {
+        var c = LevelPalette[Math.Max(0, depth - 1) % LevelPalette.Length];
+        return Color.FromArgb(0x58, c.R, c.G, c.B);
     }
+
+    private static readonly Color[] LevelPalette =
+    [
+        Hex("#3B82F6"), Hex("#10B981"), Hex("#F59E0B"), Hex("#8B5CF6"), Hex("#EC4899"), Hex("#06B6D4"),
+    ];
+
+    /// <summary>A lighter tint of a tile colour, for the second treemap level.</summary>
+    public static Color Tint(Color c, double amount) => Color.FromArgb(c.A,
+        (byte)(c.R + (255 - c.R) * amount), (byte)(c.G + (255 - c.G) * amount), (byte)(c.B + (255 - c.B) * amount));
+
+    /// <summary>A darker shade of a tile colour (treemap frames).</summary>
+    public static Color Shade(Color c, double factor) => Color.FromArgb(c.A, (byte)(c.R * factor), (byte)(c.G * factor), (byte)(c.B * factor));
 
     public static Color SafetyColor(CleanupSafety safety) => safety switch
     {
