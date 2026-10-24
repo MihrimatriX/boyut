@@ -8,11 +8,23 @@
 param(
     [Parameter(Mandatory)][string]$Exe,
     [string]$Target = 'C:\Program Files',
-    [string]$Out = 'ui-smoke'
+    [string]$Out = 'ui-smoke',
+    # Default: the window at its own startup size (what users see first). -Maximize for a full-screen pass.
+    [switch]$Maximize
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes, System.Windows.Forms, System.Drawing
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class SmokeNative {
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+    // DWMWA_EXTENDED_FRAME_BOUNDS: the visible window, without the invisible resize borders.
+    [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT rect, int size);
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
+}
+"@
 $UIA = [System.Windows.Automation.AutomationElement]
 $Scope = [System.Windows.Automation.TreeScope]
 
@@ -22,7 +34,14 @@ Remove-Item $errorLog -ErrorAction SilentlyContinue
 
 function Shot([string]$name) {
     Start-Sleep -Milliseconds 1500
-    $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+    $hwnd = [IntPtr]$script:window.Current.NativeWindowHandle
+    [SmokeNative]::SetForegroundWindow($hwnd) | Out-Null
+    $r = New-Object SmokeNative+RECT
+    if ([SmokeNative]::DwmGetWindowAttribute($hwnd, 9, [ref]$r, 16) -eq 0) {
+        $b = New-Object System.Drawing.Rectangle $r.Left, $r.Top, ($r.Right - $r.Left), ($r.Bottom - $r.Top)
+    } else {
+        $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+    }
     $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
@@ -85,7 +104,7 @@ while (-not $script:window -and (Get-Date) -lt $deadline) {
 }
 if (-not $script:window) { throw 'Boyut penceresi açılmadı.' }
 $wp = $null
-if ($script:window.TryGetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern, [ref]$wp)) {
+if ($Maximize -and $script:window.TryGetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern, [ref]$wp)) {
     $wp.SetWindowVisualState([System.Windows.Automation.WindowVisualState]::Maximized)
 }
 
@@ -109,6 +128,10 @@ Activate 'Ayrıntı bölmesi'
 
 foreach ($page in 'Ana sayfa', 'Değişimler', 'Gelişmiş arama', 'Temizlik ve türler', '#SettingsItem') {
     Activate $page
+    Start-Sleep -Milliseconds 500
+    # Selecting a rail item by automation focuses it and shows its tooltip: move focus into the page.
+    $focusable = @{ 'Ana sayfa' = 'Tara'; 'Gelişmiş arama' = 'Arama sorgusu'; 'Temizlik ve türler' = 'Seçilenleri temizle' }[$page]
+    if ($focusable) { try { (Find $focusable 5).SetFocus() } catch { } }
     Shot ('05-' + $page.TrimStart('#'))
 }
 
