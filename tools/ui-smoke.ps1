@@ -121,6 +121,7 @@ Start-Sleep -Seconds 2
 Shot '05-Gelişmiş arama-sonuçlar'
 
 # The other theme (CI machines run light), then back to the tree
+Activate '#SettingsItem'
 Activate 'Koyu'
 Activate 'Klasör ağacı'
 Shot '06-agac-koyu-tema'
