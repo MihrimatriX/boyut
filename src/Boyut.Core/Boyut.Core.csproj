@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Boyut.Core</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Boyut.Core.Tests" />
+  </ItemGroup>
+
+</Project>

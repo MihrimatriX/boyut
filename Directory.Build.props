@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Product>Boyut</Product>
+    <Version>0.2.0</Version>
+    <Authors>Boyut</Authors>
+    <NeutralLanguage>tr-TR</NeutralLanguage>
+    <!-- Lets the Windows-only projects restore and compile on Linux/macOS CI as well. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>
